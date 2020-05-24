@@ -1,0 +1,1 @@
+After building [chippy](https://github.com/bradford-hamilton/chippy), I wanted finding something a little more challenging. I really enjoyed it so I'm going to give an Apple 1 computer a shot.
