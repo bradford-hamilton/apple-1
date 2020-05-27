@@ -48,11 +48,17 @@ const (
 	zeroPageYIndexed
 )
 
-type mos6502cpu struct {
+// Mos6502 TODO: docs
+type Mos6502 struct {
 	pc uint16 // program counter (16 bit)
 	ac uint8  // accumulator (8 bit)
 	x  uint8  // X register (8 bit)
 	y  uint8  // Y register (8 bit)
 	sr uint8  // status register [NV-BDIZC] (8 bit)
 	sp uint8  // stack pointer (8 bit)
+}
+
+// New TODO: docs
+func New() *Mos6502 {
+	return &Mos6502{}
 }
