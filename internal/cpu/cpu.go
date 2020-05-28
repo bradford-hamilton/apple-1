@@ -1,5 +1,5 @@
-package cpu
-
+// Package cpu emulates a Mos6502 cpu
+//
 // A		....	Accumulator             OPC A           operand is AC (implied single byte instruction)
 // abs		....	absolute                OPC $LLHH       operand is address $HHLL *
 // abs,X	....	absolute, X-indexed     OPC $LLHH,X     operand is address; effective address is address incremented by X with carry **
@@ -13,9 +13,9 @@ package cpu
 // zpg		....	zeropage                OPC $LL         operand is zeropage address (hi-byte is zero, address = $00LL)
 // zpg,X	....	zeropage, X-indexed     OPC $LL,X       operand is zeropage address; effective address is address incremented by X without carry **
 // zpg,Y	....	zeropage, Y-indexed     OPC $LL,Y       operand is zeropage address; effective address is address incremented by Y without carry **
-
+//
 // 16-bit address words are little endian, lo(w)-byte first, followed by the hi(gh)-byte.
-
+//
 // SR Flags (bit 7 to bit 0):
 // N	....	Negative
 // V	....	Overflow
@@ -25,15 +25,16 @@ package cpu
 // I	....	Interrupt (IRQ disable)
 // Z	....	Zero
 // C	....	Carry
-
+//
 // Processor Stack:
 // LIFO, top down, 8 bit range, 0x0100 - 0x01FF
+package cpu
 
-// addressingMode is a type alias for a string, used below for defining addressing mode types
-type addressingMode int
+// addrMode is a type alias for a string, used below for defining addressing modes
+type addrMode int
 
 const (
-	accumulator addressingMode = iota
+	accumulator addrMode = iota
 	absolute
 	absoluteXIndexed
 	absoluteYIndexed
@@ -48,17 +49,39 @@ const (
 	zeroPageYIndexed
 )
 
+// Available cpu flags written as binary integer literals
+const (
+	flagDefault   uint8 = 0B_00110000
+	flagNegative  uint8 = 0B_10000000
+	flagOverflow  uint8 = 0B_01000000
+	flagB         uint8 = 0B_00010000
+	flagDecimal   uint8 = 0B_00001000
+	flagInterrupt uint8 = 0B_00000100
+	flagZero      uint8 = 0B_00000010
+	flagCarry     uint8 = 0B_00000001
+)
+
+// StackBottom represents the bottom address
+const StackBottom uint16 = 0x0100 // 256
+
 // Mos6502 TODO: docs
 type Mos6502 struct {
-	pc uint16 // program counter (16 bit)
-	ac uint8  // accumulator (8 bit)
-	x  uint8  // X register (8 bit)
-	y  uint8  // Y register (8 bit)
-	sr uint8  // status register [NV-BDIZC] (8 bit)
-	sp uint8  // stack pointer (8 bit)
+	sp uint8  // stack pointer
+	pc uint16 // program counter
+	a  uint8  // accumulator register
+	x  uint8  // X index register
+	y  uint8  // Y index register
+	p  uint8  // processor flags
 }
 
 // New TODO: docs
 func New() *Mos6502 {
-	return &Mos6502{}
+	return &Mos6502{
+		sp: 0xFF,
+		pc: 0,
+		a:  0,
+		x:  0,
+		y:  0,
+		p:  flagDefault,
+	}
 }

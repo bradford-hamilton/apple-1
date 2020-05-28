@@ -3,18 +3,18 @@ package cpu
 // op represents an operation. It includes the name of the op, it's 8 bit hexidecimal
 // opcode, how many bytes it occupies (it's size), as well as it's addressing mode.
 type op struct {
-	name           string
-	opcode         uint8
-	size           uint8
-	addressingMode addressingMode
+	name     string
+	opcode   uint8
+	size     uint8
+	addrMode addrMode
 }
 
-func newOp(name string, opcode, size uint8, addressingMode addressingMode) op {
+func newOp(name string, opcode, size uint8, addrMode addrMode) op {
 	return op{
-		name:           name,
-		opcode:         opcode,
-		size:           size,
-		addressingMode: addressingMode,
+		name:     name,
+		opcode:   opcode,
+		size:     size,
+		addrMode: addrMode,
 	}
 }
 
