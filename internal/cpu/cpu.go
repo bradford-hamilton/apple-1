@@ -28,6 +28,8 @@
 //
 // Processor Stack:
 // LIFO, top down, 8 bit range, 0x0100 - 0x01FF
+//
+// 6502 instructions have the general form AAABBBCC, where AAA and CC define the opcode, and BBB defines the addressing mode
 package cpu
 
 // addrMode is a type alias for a string, used below for defining addressing modes
@@ -50,15 +52,27 @@ const (
 )
 
 // Available cpu flags written as binary integer literals
+// https://wiki.nesdev.com/w/index.php/Status_flags
+// 7     bit     0
+// - - - - - - - -
+// N V s s D I Z C
+// | | | | | | | |
+// | | | | | | | +- Carry
+// | | | | | | +--- Zero
+// | | | | | + ---- Interrupt Disable
+// | | | | + ------ Decimal
+// | | + +--------- No CPU effect, see: the B flag
+// | + ------------ Overflow
+// +--------------- Negative
 const (
-	flagDefault   uint8 = 0B_00110000
-	flagNegative  uint8 = 0B_10000000
-	flagOverflow  uint8 = 0B_01000000
-	flagB         uint8 = 0B_00010000
-	flagDecimal   uint8 = 0B_00001000
-	flagInterrupt uint8 = 0B_00000100
-	flagZero      uint8 = 0B_00000010
-	flagCarry     uint8 = 0B_00000001
+	flagDefault           uint8 = 0B_00110000
+	flagNegative          uint8 = 0B_10000000
+	flagOverflow          uint8 = 0B_01000000
+	flagBrk               uint8 = 0B_00010000
+	flagDecimalMode       uint8 = 0B_00001000
+	flagDisableInterrupts uint8 = 0B_00000100
+	flagZero              uint8 = 0B_00000010
+	flagCarry             uint8 = 0B_00000001
 )
 
 // StackBottom represents the bottom address
@@ -69,9 +83,9 @@ type Mos6502 struct {
 	sp uint8  // stack pointer
 	pc uint16 // program counter
 	a  uint8  // accumulator register
-	x  uint8  // X index register
-	y  uint8  // Y index register
-	p  uint8  // processor flags
+	x  uint8  // x index register
+	y  uint8  // y index register
+	ps uint8  // processor status register
 }
 
 // New TODO: docs
@@ -82,6 +96,6 @@ func New() *Mos6502 {
 		a:  0,
 		x:  0,
 		y:  0,
-		p:  flagDefault,
+		ps: flagDefault,
 	}
 }
