@@ -68,7 +68,7 @@ const (
 	flagDefault           uint8 = 0B_00110000
 	flagNegative          uint8 = 0B_10000000
 	flagOverflow          uint8 = 0B_01000000
-	flagBrk               uint8 = 0B_00010000
+	flagBreak             uint8 = 0B_00010000
 	flagDecimalMode       uint8 = 0B_00001000
 	flagDisableInterrupts uint8 = 0B_00000100
 	flagZero              uint8 = 0B_00000010
@@ -80,12 +80,12 @@ const StackBottom uint16 = 0x0100 // 256
 
 // Mos6502 TODO: docs
 type Mos6502 struct {
-	sp uint8  // stack pointer
-	pc uint16 // program counter
-	a  uint8  // accumulator register
-	x  uint8  // x index register
-	y  uint8  // y index register
-	ps uint8  // processor status register
+	sp uint8  // register - stack pointer
+	pc uint16 // register - program counter
+	a  uint8  // register - accumulator
+	x  uint8  // register - x index
+	y  uint8  // register - y index
+	ps uint8  // register - processor status
 }
 
 // New TODO: docs
