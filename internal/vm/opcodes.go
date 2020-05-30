@@ -77,13 +77,13 @@ var opcodes = map[uint8]op{
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// implied       BRK          00   1      7
-	0x00: newOp("BRK", 0x00, 1, implied, exec0x00),
+	0x00: newOp("BRK", 0x00, 1, implied, execBRK),
 
 	// RTI Return from Interrupt
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// implied       RTI          40   1      6
-	0x40: newOp("RTI", 0x40, 1, implied, exec0x40),
+	0x40: newOp("RTI", 0x40, 1, implied, execRTI),
 
 	// DEC Decrement Memory by One
 	// addressing    assembler    opc  bytes  cyles
@@ -92,10 +92,10 @@ var opcodes = map[uint8]op{
 	// zeropage,X    DEC oper,X   D6   2      6
 	// absolute      DEC oper     CE   3      6
 	// absolute,X    DEC oper,X   DE   3      7
-	0xC6: newOp("DEC", 0xC6, 2, zeroPage, exec0xC6),
-	0xD6: newOp("DEC", 0xD6, 2, zeroPageXIndexed, exec0xC6),
-	0xCE: newOp("DEC", 0xCE, 3, absolute, exec0xC6),
-	0xDE: newOp("DEC", 0xDE, 3, absoluteXIndexed, exec0xC6),
+	0xC6: newOp("DEC", 0xC6, 2, zeroPage, execDEC),
+	0xD6: newOp("DEC", 0xD6, 2, zeroPageXIndexed, execDEC),
+	0xCE: newOp("DEC", 0xCE, 3, absolute, execDEC),
+	0xDE: newOp("DEC", 0xDE, 3, absoluteXIndexed, execDEC),
 
 	// INC Increment Memory by One
 	// addressing    assembler    opc  bytes  cyles
@@ -104,10 +104,10 @@ var opcodes = map[uint8]op{
 	// zeropage,X    INC oper,X   F6   2      6
 	// absolute      INC oper     EE   3      6
 	// absolute,X    INC oper,X   FE   3      7
-	0xE6: newOp("INC", 0xE6, 2, zeroPage, todo),
-	0xF6: newOp("INC", 0xF6, 2, zeroPageXIndexed, todo),
-	0xEE: newOp("INC", 0xEE, 3, absolute, todo),
-	0xFE: newOp("INC", 0xFE, 3, absoluteXIndexed, todo),
+	0xE6: newOp("INC", 0xE6, 2, zeroPage, execINC),
+	0xF6: newOp("INC", 0xF6, 2, zeroPageXIndexed, execINC),
+	0xEE: newOp("INC", 0xEE, 3, absolute, execINC),
+	0xFE: newOp("INC", 0xFE, 3, absoluteXIndexed, execINC),
 
 	// INX Increment Index X by One
 	// addressing    assembler    opc  bytes  cyles

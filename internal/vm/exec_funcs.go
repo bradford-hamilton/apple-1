@@ -9,7 +9,7 @@ func todo(a *Appleone, o op) error {
 
 // interrupt,                       N Z C I D V
 // push PC+2, push SR               - - - 1 - -
-func exec0x00(a *Appleone, o op) error {
+func execBRK(a *Appleone, o op) error {
 	// set processer status flag to BRK
 	a.cpu.ps = flagBreak
 
@@ -24,7 +24,7 @@ func exec0x00(a *Appleone, o op) error {
 
 // pull SR, pull PC                 N Z C I D V
 // from stack
-func exec0x40(a *Appleone, o op) error {
+func execRTI(a *Appleone, o op) error {
 	a.cpu.ps = a.popStackWord()
 	a.cpu.pc = a.popStackDWord()
 	return nil
@@ -32,18 +32,40 @@ func exec0x40(a *Appleone, o op) error {
 
 // M - 1 -> M                       N Z C I D V
 //                                  + + - - - -
-func exec0xC6(a *Appleone, o op) error {
+func execDEC(a *Appleone, o op) error {
 	addr, err := o.getAddr(a)
 	if err != nil {
 		return err
 	}
-
 	b := a.mem[addr]
 	b--
 	a.mem[addr] = b
-
 	a.setZeroIfNeeded(b)
 	a.setNegativeIfOverflow(b)
+	return nil
+}
 
+// M + 1 -> M                       N Z C I D V
+//                                  + + - - - -
+func execINC(a *Appleone, o op) error {
+	addr, err := o.getAddr(a)
+	if err != nil {
+		return err
+	}
+	b := a.mem[addr]
+	b++
+	a.mem[addr] = b
+	a.setZeroIfNeeded(b)
+	a.setNegativeIfOverflow(b)
+	return nil
+}
+
+// X + 1 -> X                       N Z C I D V
+//                                  + + - - - -
+func execINX(a *Appleone, o op) error {
+	b := a.cpu.x + 1
+	a.cpu.x = b
+	a.setZeroIfNeeded(b)
+	a.setNegativeIfOverflow(b)
 	return nil
 }
