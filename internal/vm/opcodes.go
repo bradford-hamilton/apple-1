@@ -2,7 +2,6 @@ package vm
 
 import (
 	"errors"
-	"fmt"
 )
 
 // op represents an operation. It includes the name of the op, it's 8 bit hexidecimal
@@ -34,37 +33,41 @@ func opByCode(b byte) (op, error) {
 	return o, nil
 }
 
-// interrupt,                       N Z C I D V
-// push PC+2, push SR               - - - 1 - -
-func exec0x00(a *Appleone, o op) error {
-	// set processer status flag to BRK
-	a.cpu.ps = flagBreak
-
-	a.pushDWordToStack(a.cpu.pc + 1)
-	a.pushWordToStack(a.cpu.ps)
-
-	a.cpu.ps |= flagDisableInterrupts
-	a.cpu.pc = uint16(a.mem[0xFFFF])<<8 | uint16(a.mem[0xFFFE])
-
-	return nil
-}
-
-// pull SR, pull PC                 N Z C I D V
-// from stack
-func exec0x40(a *Appleone, o op) error {
-	a.cpu.ps = a.popStackWord()
-	a.cpu.pc = a.popStackDWord()
-	return nil
-}
-
-func exec0xC6(a *Appleone, o op) error {
-	fmt.Println("Implement me")
-	return nil
-}
-
-func todo(a *Appleone, o op) error {
-	fmt.Println("implement me")
-	return nil
+func (o op) getAddr(a *Appleone) (uint16, error) {
+	switch o.addrMode {
+	// TODO: will these ever apply here?
+	// case accumulator:
+	//
+	// case implied:
+	//
+	case absolute:
+		return a.nextDWord(), nil
+	case absoluteXIndexed:
+		return a.nextDWord() + uint16(a.cpu.x), nil
+	case absoluteYIndexed:
+		return a.nextDWord() + uint16(a.cpu.y), nil
+	case immediate:
+		return a.cpu.pc - 1, nil
+	case indirect:
+		return uint16(a.nextWord()), nil
+	case indirectXIndexed:
+		addr := (uint16(a.nextWord()) + uint16(a.cpu.x)) & 0xFF
+		return a.littleEndianToUint16(a.mem[addr+1], a.mem[addr]), nil
+	case indirectYIndexed:
+		addr := uint16(a.nextWord())
+		val := a.littleEndianToUint16(a.mem[addr+1], a.mem[addr])
+		return val + uint16(a.cpu.y), nil
+	case relative:
+		return a.cpu.pc - 1, nil
+	case zeroPage:
+		return uint16(a.nextWord()) & 0xFF, nil
+	case zeroPageXIndexed:
+		return (uint16(a.nextWord()) + uint16(a.cpu.x)) & 0xFF, nil
+	case zeroPageYIndexed:
+		return (uint16(a.nextWord()) + uint16(a.cpu.y)) & 0xFF, nil
+	default:
+		return 0, errors.New("unkown addressing mode")
+	}
 }
 
 // opcodes represent all of the Apple 1 opcodes available. Each 8 bit opcode is mapped to a corresponding
@@ -90,9 +93,9 @@ var opcodes = map[uint8]op{
 	// absolute      DEC oper     CE   3      6
 	// absolute,X    DEC oper,X   DE   3      7
 	0xC6: newOp("DEC", 0xC6, 2, zeroPage, exec0xC6),
-	0xD6: newOp("DEC", 0xD6, 2, zeroPageXIndexed, todo),
-	0xCE: newOp("DEC", 0xCE, 3, absolute, todo),
-	0xDE: newOp("DEC", 0xDE, 3, absoluteXIndexed, todo),
+	0xD6: newOp("DEC", 0xD6, 2, zeroPageXIndexed, exec0xC6),
+	0xCE: newOp("DEC", 0xCE, 3, absolute, exec0xC6),
+	0xDE: newOp("DEC", 0xDE, 3, absoluteXIndexed, exec0xC6),
 
 	// INC Increment Memory by One
 	// addressing    assembler    opc  bytes  cyles
