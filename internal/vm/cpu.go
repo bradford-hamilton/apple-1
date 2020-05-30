@@ -1,4 +1,7 @@
-// Package cpu emulates a Mos6502 cpu
+// Package vm emulates a MOS Technology 6502 Microprocessor which is an 8-bit microprocessor
+// that was designed by a small team led by Chuck Peddle for MOS Technology. The design team
+// had formerly worked at Motorola on the Motorola 6800 project; the 6502 is essentially
+// simplified, less expensive and faster version of that design.
 //
 // A		....	Accumulator             OPC A           operand is AC (implied single byte instruction)
 // abs		....	absolute                OPC $LLHH       operand is address $HHLL *
@@ -16,21 +19,11 @@
 //
 // 16-bit address words are little endian, lo(w)-byte first, followed by the hi(gh)-byte.
 //
-// SR Flags (bit 7 to bit 0):
-// N	....	Negative
-// V	....	Overflow
-// -	....	ignored
-// B	....	Break
-// D	....	Decimal (use BCD for arithmetics)
-// I	....	Interrupt (IRQ disable)
-// Z	....	Zero
-// C	....	Carry
-//
 // Processor Stack:
 // LIFO, top down, 8 bit range, 0x0100 - 0x01FF
 //
 // 6502 instructions have the general form AAABBBCC, where AAA and CC define the opcode, and BBB defines the addressing mode
-package cpu
+package vm
 
 // addrMode is a type alias for a string, used below for defining addressing modes
 type addrMode int
@@ -88,8 +81,8 @@ type Mos6502 struct {
 	ps uint8  // register - processor status
 }
 
-// New TODO: docs
-func New() *Mos6502 {
+// newCPU TODO: docs
+func newCPU() *Mos6502 {
 	return &Mos6502{
 		sp: 0xFF,
 		pc: 0,
