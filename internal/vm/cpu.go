@@ -68,7 +68,7 @@ const (
 	flagCarry             uint8 = 0B_00000001
 )
 
-// StackBottom represents the bottom address
+// StackBottom represents the start of the stack
 const StackBottom uint16 = 0x0100 // 256
 
 // Mos6502 TODO: docs
@@ -81,7 +81,7 @@ type Mos6502 struct {
 	ps uint8  // register - processor status
 }
 
-// newCPU TODO: docs
+// newCPU initializes and returns a new Mos6502 CPU
 func newCPU() *Mos6502 {
 	return &Mos6502{
 		sp: 0xFF,
