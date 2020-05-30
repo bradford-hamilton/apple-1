@@ -36,6 +36,10 @@ func (a *Appleone) step() {
 	}
 }
 
+func (a *Appleone) littleEndianToUint16(big, little uint8) uint16 {
+	return uint16(a.mem[big])<<8 | uint16(a.mem[little])
+}
+
 // pushWordToStack pushes the given word (byte) into memory and sets the new stack pointer
 func (a *Appleone) pushWordToStack(b byte) {
 	a.mem[StackBottom+uint16(a.cpu.sp)] = b
@@ -61,4 +65,44 @@ func (a *Appleone) popStackDWord() uint16 {
 	l := a.popStackWord()
 	h := a.popStackWord()
 	return (uint16(h) << 8) | uint16(l)
+}
+
+// nextWord returns the next byte in memory
+func (a *Appleone) nextWord() uint8 {
+	return a.mem[a.cpu.pc-1]
+}
+
+// nextDWord returns the next two bytes (double word)
+func (a *Appleone) nextDWord() uint16 {
+	return a.littleEndianToUint16(a.mem[a.cpu.pc-1], a.mem[a.cpu.pc-2])
+}
+
+func (a *Appleone) setZeroIfNeeded(word uint8) {
+	a.clearZero()
+	if word == 0 {
+		a.setZero()
+	}
+}
+
+func (a *Appleone) setZero() {
+	a.cpu.ps |= flagZero
+}
+
+func (a *Appleone) clearZero() {
+	a.cpu.sp &^= flagZero
+}
+
+func (a *Appleone) setNegativeIfOverflow(word uint8) {
+	a.clearNegative()
+	if word > 127 {
+		a.setNegative()
+	}
+}
+
+func (a *Appleone) setNegative() {
+	a.cpu.ps |= flagZero
+}
+
+func (a *Appleone) clearNegative() {
+	a.cpu.sp &^= flagZero
 }
