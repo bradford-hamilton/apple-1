@@ -113,13 +113,13 @@ var opcodes = map[uint8]op{
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// implied       INX          E8   1      2
-	0xE8: newOp("INX", 0xE8, 1, implied, todo),
+	0xE8: newOp("INX", 0xE8, 1, implied, execINX),
 
 	// INY  Increment Index Y by One
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// implied       INY          C8   1      2
-	0xC8: newOp("INY", 0xC8, 1, implied, todo),
+	0xC8: newOp("INY", 0xC8, 1, implied, execINY),
 
 	// TAX Transfer Accumulator to Index X
 	// addressing    assembler    opc  bytes  cyles

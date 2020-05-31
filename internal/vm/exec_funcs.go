@@ -69,3 +69,13 @@ func execINX(a *Appleone, o op) error {
 	a.setNegativeIfOverflow(b)
 	return nil
 }
+
+// Y + 1 -> Y                       N Z C I D V
+//                                  + + - - - -
+func execINY(a *Appleone, o op) error {
+	b := a.cpu.y + 1
+	a.cpu.y = b
+	a.setZeroIfNeeded(b)
+	a.setNegativeIfOverflow(b)
+	return nil
+}
