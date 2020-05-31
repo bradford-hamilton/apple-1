@@ -184,11 +184,11 @@ var opcodes = map[uint8]op{
 	// zeropage,Y    LDX oper,Y    B6    2     4
 	// absolute      LDX oper      AE    3     4
 	// absolute,Y    LDX oper,Y    BE    3     4*
-	0xA2: newOp("LDX", 0xA2, 2, immediate, todo),
-	0xA6: newOp("LDX", 0xA6, 2, zeroPage, todo),
-	0xB6: newOp("LDX", 0xB6, 2, zeroPageYIndexed, todo),
-	0xAE: newOp("LDX", 0xAE, 3, absolute, todo),
-	0xBE: newOp("LDX", 0xBE, 3, absoluteYIndexed, todo),
+	0xA2: newOp("LDX", 0xA2, 2, immediate, execLDX),
+	0xA6: newOp("LDX", 0xA6, 2, zeroPage, execLDX),
+	0xB6: newOp("LDX", 0xB6, 2, zeroPageYIndexed, execLDX),
+	0xAE: newOp("LDX", 0xAE, 3, absolute, execLDX),
+	0xBE: newOp("LDX", 0xBE, 3, absoluteYIndexed, execLDX),
 
 	// LDY Load Index Y with Memory
 	// addressing    assembler    opc  bytes  cyles
@@ -198,11 +198,11 @@ var opcodes = map[uint8]op{
 	// zeropage,X    LDY oper,X   B4   2      4
 	// absolute      LDY oper     AC   3      4
 	// absolute,X    LDY oper,X   BC   3      4*
-	0xA0: newOp("LDY", 0xA0, 2, immediate, todo),
-	0xA4: newOp("LDY", 0xA4, 2, zeroPage, todo),
-	0xB4: newOp("LDY", 0xB4, 2, zeroPageXIndexed, todo),
-	0xAC: newOp("LDY", 0xAC, 3, absolute, todo),
-	0xBC: newOp("LDY", 0xBC, 3, absoluteXIndexed, todo),
+	0xA0: newOp("LDY", 0xA0, 2, immediate, execLDY),
+	0xA4: newOp("LDY", 0xA4, 2, zeroPage, execLDY),
+	0xB4: newOp("LDY", 0xB4, 2, zeroPageXIndexed, execLDY),
+	0xAC: newOp("LDY", 0xAC, 3, absolute, execLDY),
+	0xBC: newOp("LDY", 0xBC, 3, absoluteXIndexed, execLDY),
 
 	// ADC Add Memory to Accumulator with Carry
 	// addressing    assembler     opc  bytes  cyles
@@ -215,14 +215,14 @@ var opcodes = map[uint8]op{
 	// absolute,Y    ADC oper,Y    79   3      4*
 	// (indirect,X)  ADC (oper,X)  61   2      6
 	// (indirect),Y  ADC (oper),Y  71   2      5*
-	0x69: newOp("ADC", 0x69, 2, immediate, todo),
-	0x65: newOp("ADC", 0x65, 2, zeroPage, todo),
-	0x75: newOp("ADC", 0x75, 2, zeroPageXIndexed, todo),
-	0x6D: newOp("ADC", 0x6D, 3, absolute, todo),
-	0x7D: newOp("ADC", 0x7D, 3, absoluteXIndexed, todo),
-	0x79: newOp("ADC", 0x79, 3, absoluteYIndexed, todo),
-	0x61: newOp("ADC", 0x61, 2, indirectXIndexed, todo),
-	0x71: newOp("ADC", 0x71, 2, indirectYIndexed, todo),
+	0x69: newOp("ADC", 0x69, 2, immediate, execADC),
+	0x65: newOp("ADC", 0x65, 2, zeroPage, execADC),
+	0x75: newOp("ADC", 0x75, 2, zeroPageXIndexed, execADC),
+	0x6D: newOp("ADC", 0x6D, 3, absolute, execADC),
+	0x7D: newOp("ADC", 0x7D, 3, absoluteXIndexed, execADC),
+	0x79: newOp("ADC", 0x79, 3, absoluteYIndexed, execADC),
+	0x61: newOp("ADC", 0x61, 2, indirectXIndexed, execADC),
+	0x71: newOp("ADC", 0x71, 2, indirectYIndexed, execADC),
 
 	// SBC Subtract Memory from Accumulator with Borrow
 	// addressing    assembler     opc   bytes cyles

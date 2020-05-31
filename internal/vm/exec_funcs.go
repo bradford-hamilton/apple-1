@@ -63,20 +63,18 @@ func execINC(a *Appleone, o op) error {
 // X + 1 -> X                       N Z C I D V
 //                                  + + - - - -
 func execINX(a *Appleone, o op) error {
-	b := a.cpu.x + 1
-	a.cpu.x = b
-	a.setZeroIfNeeded(b)
-	a.setNegativeIfOverflow(b)
+	a.cpu.x++
+	a.setZeroIfNeeded(a.cpu.x)
+	a.setNegativeIfOverflow(a.cpu.x)
 	return nil
 }
 
 // Y + 1 -> Y                       N Z C I D V
 //                                  + + - - - -
 func execINY(a *Appleone, o op) error {
-	b := a.cpu.y + 1
-	a.cpu.y = b
-	a.setZeroIfNeeded(b)
-	a.setNegativeIfOverflow(b)
+	a.cpu.y++
+	a.setZeroIfNeeded(a.cpu.y)
+	a.setNegativeIfOverflow(a.cpu.y)
 	return nil
 }
 
@@ -101,20 +99,18 @@ func execTAY(a *Appleone, o op) error {
 // X - 1 -> X                       N Z C I D V
 //                                  + + - - - -
 func execDEX(a *Appleone, o op) error {
-	b := a.cpu.x - 1
-	a.cpu.x = b
-	a.setZeroIfNeeded(b)
-	a.setNegativeIfOverflow(b)
+	a.cpu.x--
+	a.setZeroIfNeeded(a.cpu.x)
+	a.setNegativeIfOverflow(a.cpu.x)
 	return nil
 }
 
 // Y - 1 -> Y                       N Z C I D V
 //                                  + + - - - -
 func execDEY(a *Appleone, o op) error {
-	b := a.cpu.y - 1
-	a.cpu.y = b
-	a.setZeroIfNeeded(b)
-	a.setNegativeIfOverflow(b)
+	a.cpu.y--
+	a.setZeroIfNeeded(a.cpu.y)
+	a.setNegativeIfOverflow(a.cpu.y)
 	return nil
 }
 
@@ -126,5 +122,62 @@ func execLDA(a *Appleone, o op) error {
 		return err
 	}
 	a.cpu.a = b
+	a.setZeroIfNeeded(a.cpu.a)
+	a.setNegativeIfOverflow(a.cpu.a)
+	return nil
+}
+
+// M -> X                           N Z C I D V
+//                                  + + - - - -
+func execLDX(a *Appleone, o op) error {
+	b, err := o.getData(a)
+	if err != nil {
+		return err
+	}
+	a.cpu.x = b
+	a.setZeroIfNeeded(a.cpu.x)
+	a.setNegativeIfOverflow(a.cpu.x)
+	return nil
+}
+
+// M -> Y                           N Z C I D V
+//                                  + + - - - -
+func execLDY(a *Appleone, o op) error {
+	b, err := o.getData(a)
+	if err != nil {
+		return err
+	}
+	a.cpu.y = b
+	a.setZeroIfNeeded(a.cpu.y)
+	a.setNegativeIfOverflow(a.cpu.y)
+	return nil
+}
+
+// A + M + C -> A, C                N Z C I D V
+//                                  + + + - - +
+func execADC(a *Appleone, o op) error {
+	b, err := o.getData(a)
+	if err != nil {
+		return err
+	}
+	operand := uint16(b)
+	regA := uint16(a.cpu.a)
+	sum := regA + operand + uint16(a.getCarry())
+	a.cpu.a = uint8(sum)
+
+	a.clearCarry()
+	if sum > 255 {
+		a.setCarry()
+	}
+
+	// http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+	a.clearOverflow()
+	if (operand^sum)&(regA^sum)&0x80 != 0 {
+		a.setOverflow()
+	}
+
+	a.setZeroIfNeeded(a.cpu.a)
+	a.setNegativeIfOverflow(a.cpu.a)
+
 	return nil
 }

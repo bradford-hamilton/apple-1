@@ -106,3 +106,23 @@ func (a *Appleone) setNegative() {
 func (a *Appleone) clearNegative() {
 	a.cpu.sp &^= flagZero
 }
+
+func (a *Appleone) getCarry() uint8 {
+	return a.cpu.sp & flagCarry
+}
+
+func (a *Appleone) setCarry() {
+	a.cpu.sp |= flagCarry
+}
+
+func (a *Appleone) clearCarry() {
+	a.cpu.sp &^= flagCarry
+}
+
+func (a *Appleone) setOverflow() {
+	a.cpu.sp |= flagOverflow
+}
+
+func (a *Appleone) clearOverflow() {
+	a.cpu.sp &^= flagOverflow
+}
