@@ -70,6 +70,17 @@ func (o op) getAddr(a *Appleone) (uint16, error) {
 	}
 }
 
+func (o op) getData(a *Appleone) (uint8, error) {
+	if o.addrMode == accumulator {
+		return a.cpu.a, nil
+	}
+	b, err := o.getAddr(a)
+	if err != nil {
+		return 0, err
+	}
+	return a.mem[b], nil
+}
+
 // opcodes represent all of the Apple 1 opcodes available. Each 8 bit opcode is mapped to a corresponding
 // "op" which is just a struct holding metadata about the operation.
 var opcodes = map[uint8]op{
@@ -125,25 +136,25 @@ var opcodes = map[uint8]op{
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// implied       TAX          AA   1      2
-	0xAA: newOp("TAX", 0xAA, 1, implied, todo),
+	0xAA: newOp("TAX", 0xAA, 1, implied, execTAX),
 
 	// TAY Transfer Accumulator to Index Y
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// implied       TAY          A8   1      2
-	0xA8: newOp("TAY", 0xA8, 1, implied, todo),
+	0xA8: newOp("TAY", 0xA8, 1, implied, execTAY),
 
 	// DEX Decrement Index X by One
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// implied       DEC          CA   1      2
-	0xCA: newOp("DEX", 0xCA, 1, implied, todo),
+	0xCA: newOp("DEX", 0xCA, 1, implied, execDEX),
 
 	// DEY Decrement Index Y by One
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// implied       DEC          88   1      2
-	0x88: newOp("DEY", 0x88, 1, implied, todo),
+	0x88: newOp("DEY", 0x88, 1, implied, execDEY),
 
 	// LDA Load Accumulator with Memory
 	// addressing    assembler    opc  bytes  cyles
