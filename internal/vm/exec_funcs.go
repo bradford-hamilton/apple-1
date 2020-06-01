@@ -330,6 +330,15 @@ func execBPL(a *Appleone, o op) error {
 	return nil
 }
 
+// branch on C = 1                  N Z C I D V
+//                                  - - - - - -
+func execBCS(a *Appleone, o op) error {
+	if a.getCarry() != 0 {
+		a.branch(o)
+	}
+	return nil
+}
+
 // X - M                            N Z C I D V
 //                                  + + + - - -
 func execCPX(a *Appleone, o op) error {

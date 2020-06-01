@@ -336,7 +336,7 @@ var opcodes = map[uint8]op{
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------
 	// relative      BCS oper     B0   2      2**
-	0xB0: newOp("BCS", 0xB0, 2, relative, todo),
+	0xB0: newOp("BCS", 0xB0, 2, relative, execBCS),
 
 	// CPX Compare Memory and Index X
 	// addressing    assembler    opc  bytes  cyles
