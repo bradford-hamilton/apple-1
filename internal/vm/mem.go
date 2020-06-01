@@ -8,7 +8,7 @@ func newBlock() [64 * 1024]byte {
 }
 
 // load loads a program into memory at the provided address space
-func (b block) load(addr uint16, data []uint8) {
+func (b block) load(addr uint16, data []byte) {
 	end := int(addr) + len(data)
 
 	for i := int(addr); i < end; i++ {

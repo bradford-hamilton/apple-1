@@ -58,14 +58,14 @@ const (
 // | + ------------ Overflow
 // +--------------- Negative
 const (
-	flagDefault           uint8 = 0B_00110000
-	flagNegative          uint8 = 0B_10000000
-	flagOverflow          uint8 = 0B_01000000
-	flagBreak             uint8 = 0B_00010000
-	flagDecimalMode       uint8 = 0B_00001000
-	flagDisableInterrupts uint8 = 0B_00000100
-	flagZero              uint8 = 0B_00000010
-	flagCarry             uint8 = 0B_00000001
+	flagDefault           byte = 0B_00110000
+	flagNegative          byte = 0B_10000000
+	flagOverflow          byte = 0B_01000000
+	flagBreak             byte = 0B_00010000
+	flagDecimalMode       byte = 0B_00001000
+	flagDisableInterrupts byte = 0B_00000100
+	flagZero              byte = 0B_00000010
+	flagCarry             byte = 0B_00000001
 )
 
 // StackBottom represents the start of the stack
@@ -73,12 +73,12 @@ const StackBottom uint16 = 0x0100 // 256
 
 // Mos6502 TODO: docs
 type Mos6502 struct {
-	sp uint8  // register - stack pointer
+	sp byte   // register - stack pointer
 	pc uint16 // register - program counter
-	a  uint8  // register - accumulator
-	x  uint8  // register - x index
-	y  uint8  // register - y index
-	ps uint8  // register - processor status
+	a  byte   // register - accumulator
+	x  byte   // register - x index
+	y  byte   // register - y index
+	ps byte   // register - processor status
 }
 
 // newCPU initializes and returns a new Mos6502 CPU

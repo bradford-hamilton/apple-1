@@ -8,13 +8,13 @@ import (
 // opcode, how many bytes it occupies (it's size), as well as it's addressing mode.
 type op struct {
 	name     string
-	opcode   uint8
-	size     uint8
+	opcode   byte
+	size     byte
 	addrMode addrMode
 	exec     func(a *Appleone, o op) error
 }
 
-func newOp(name string, opcode, size uint8, addrMode addrMode, exec func(a *Appleone, o op) error) op {
+func newOp(name string, opcode, size byte, addrMode addrMode, exec func(a *Appleone, o op) error) op {
 	return op{
 		name:     name,
 		opcode:   opcode,
@@ -35,7 +35,7 @@ func opByCode(b byte) (op, error) {
 
 // opcodes represent all of the Apple 1 opcodes available. Each 8 bit opcode is mapped to a corresponding
 // "op" which is just a struct holding metadata about the operation.
-var opcodes = map[uint8]op{
+var opcodes = map[byte]op{
 	// BRK Force Break
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------

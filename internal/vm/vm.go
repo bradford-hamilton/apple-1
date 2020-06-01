@@ -74,7 +74,7 @@ func (a *Appleone) getAddr(o op) (uint16, error) {
 	}
 }
 
-func (a *Appleone) getOperand(o op) (uint8, error) {
+func (a *Appleone) getOperand(o op) (byte, error) {
 	if o.addrMode == accumulator {
 		return a.cpu.a, nil
 	}
