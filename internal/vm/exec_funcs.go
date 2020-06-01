@@ -40,8 +40,8 @@ func execDEC(a *Appleone, o op) error {
 	b := a.mem[addr]
 	b--
 	a.mem[addr] = b
-	a.setZeroIfNeeded(b)
-	a.setNegativeIfOverflow(b)
+	a.maybeSetFlagZero(b)
+	a.maybeHandleOverflow(b)
 	return nil
 }
 
@@ -55,8 +55,8 @@ func execINC(a *Appleone, o op) error {
 	b := a.mem[addr]
 	b++
 	a.mem[addr] = b
-	a.setZeroIfNeeded(b)
-	a.setNegativeIfOverflow(b)
+	a.maybeSetFlagZero(b)
+	a.maybeHandleOverflow(b)
 	return nil
 }
 
@@ -64,8 +64,8 @@ func execINC(a *Appleone, o op) error {
 //                                  + + - - - -
 func execINX(a *Appleone, o op) error {
 	a.cpu.x++
-	a.setZeroIfNeeded(a.cpu.x)
-	a.setNegativeIfOverflow(a.cpu.x)
+	a.maybeSetFlagZero(a.cpu.x)
+	a.maybeHandleOverflow(a.cpu.x)
 	return nil
 }
 
@@ -73,8 +73,8 @@ func execINX(a *Appleone, o op) error {
 //                                  + + - - - -
 func execINY(a *Appleone, o op) error {
 	a.cpu.y++
-	a.setZeroIfNeeded(a.cpu.y)
-	a.setNegativeIfOverflow(a.cpu.y)
+	a.maybeSetFlagZero(a.cpu.y)
+	a.maybeHandleOverflow(a.cpu.y)
 	return nil
 }
 
@@ -82,8 +82,8 @@ func execINY(a *Appleone, o op) error {
 //                                  + + - - - -
 func execTAX(a *Appleone, o op) error {
 	a.cpu.x = a.cpu.a
-	a.setZeroIfNeeded(a.cpu.x)
-	a.setNegativeIfOverflow(a.cpu.x)
+	a.maybeSetFlagZero(a.cpu.x)
+	a.maybeHandleOverflow(a.cpu.x)
 	return nil
 }
 
@@ -91,8 +91,8 @@ func execTAX(a *Appleone, o op) error {
 //                                  + + - - - -
 func execTAY(a *Appleone, o op) error {
 	a.cpu.y = a.cpu.a
-	a.setZeroIfNeeded(a.cpu.y)
-	a.setNegativeIfOverflow(a.cpu.y)
+	a.maybeSetFlagZero(a.cpu.y)
+	a.maybeHandleOverflow(a.cpu.y)
 	return nil
 }
 
@@ -100,8 +100,8 @@ func execTAY(a *Appleone, o op) error {
 //                                  + + - - - -
 func execDEX(a *Appleone, o op) error {
 	a.cpu.x--
-	a.setZeroIfNeeded(a.cpu.x)
-	a.setNegativeIfOverflow(a.cpu.x)
+	a.maybeSetFlagZero(a.cpu.x)
+	a.maybeHandleOverflow(a.cpu.x)
 	return nil
 }
 
@@ -109,8 +109,8 @@ func execDEX(a *Appleone, o op) error {
 //                                  + + - - - -
 func execDEY(a *Appleone, o op) error {
 	a.cpu.y--
-	a.setZeroIfNeeded(a.cpu.y)
-	a.setNegativeIfOverflow(a.cpu.y)
+	a.maybeSetFlagZero(a.cpu.y)
+	a.maybeHandleOverflow(a.cpu.y)
 	return nil
 }
 
@@ -122,8 +122,8 @@ func execLDA(a *Appleone, o op) error {
 		return err
 	}
 	a.cpu.a = operand
-	a.setZeroIfNeeded(a.cpu.a)
-	a.setNegativeIfOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
 	return nil
 }
 
@@ -135,8 +135,8 @@ func execLDX(a *Appleone, o op) error {
 		return err
 	}
 	a.cpu.x = operand
-	a.setZeroIfNeeded(a.cpu.x)
-	a.setNegativeIfOverflow(a.cpu.x)
+	a.maybeSetFlagZero(a.cpu.x)
+	a.maybeHandleOverflow(a.cpu.x)
 	return nil
 }
 
@@ -148,8 +148,8 @@ func execLDY(a *Appleone, o op) error {
 		return err
 	}
 	a.cpu.y = operand
-	a.setZeroIfNeeded(a.cpu.y)
-	a.setNegativeIfOverflow(a.cpu.y)
+	a.maybeSetFlagZero(a.cpu.y)
+	a.maybeHandleOverflow(a.cpu.y)
 	return nil
 }
 
@@ -162,22 +162,22 @@ func execADC(a *Appleone, o op) error {
 	}
 	operand := uint16(b)
 	regA := uint16(a.cpu.a)
-	sum := regA + operand + uint16(a.getCarry())
+	sum := regA + operand + uint16(a.getFlag(flagCarry))
 	a.cpu.a = byte(sum)
 
-	a.clearCarry()
+	a.clearFlag(flagCarry)
 	if sum > 255 {
-		a.setCarry()
+		a.setFlag(flagCarry)
 	}
 
 	// http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
-	a.clearOverflow()
+	a.clearFlag(flagOverflow)
 	if (operand^sum)&(regA^sum)&0x80 != 0 {
-		a.setOverflow()
+		a.setFlag(flagOverflow)
 	}
 
-	a.setZeroIfNeeded(a.cpu.a)
-	a.setNegativeIfOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
 
 	return nil
 }
@@ -190,29 +190,29 @@ func execSBC(a *Appleone, o op) error {
 		return err
 	}
 
-	carry := uint16(1 - a.getCarry())
+	carry := uint16(1 - a.getFlag(flagCarry))
 	regA := a.cpu.a
 	sum := uint16(regA) - carry - uint16(operand)
 	a.cpu.a = byte(sum)
-	a.clearOverflow()
+	a.clearFlag(flagOverflow)
 
 	if byte(regA)>>7 != a.cpu.a>>7 {
-		a.setOverflow()
+		a.setFlag(flagOverflow)
 	}
 
 	if uint16(sum) < 256 {
-		a.setCarry()
+		a.setFlag(flagCarry)
 	} else {
-		a.clearCarry()
+		a.clearFlag(flagCarry)
 	}
 
-	a.clearOverflow()
+	a.clearFlag(flagOverflow)
 	if ((255-operand)^a.cpu.a)&(regA^a.cpu.a)&0x80 != 0 {
-		a.setOverflow()
+		a.setFlag(flagOverflow)
 	}
 
-	a.setZeroIfNeeded(a.cpu.a)
-	a.setNegativeIfOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
 	return nil
 }
 
@@ -252,7 +252,7 @@ func execSTA(a *Appleone, o op) error {
 // branch on Z = 1                  N Z C I D V
 //                                  - - - - - -
 func execBEQ(a *Appleone, o op) error {
-	if a.getZero() == flagZero {
+	if a.getFlag(flagZero) == flagZero {
 		a.branch(o)
 	}
 	return nil
@@ -261,7 +261,7 @@ func execBEQ(a *Appleone, o op) error {
 // branch on Z = 0                  N Z C I D V
 //                                  - - - - - -
 func execBNE(a *Appleone, o op) error {
-	if a.getZero() != flagZero {
+	if a.getFlag(flagZero) != flagZero {
 		a.branch(o)
 	}
 	return nil
@@ -270,7 +270,7 @@ func execBNE(a *Appleone, o op) error {
 // branch on V = 0                  N Z C I D V
 //                                  - - - - - -
 func execBVC(a *Appleone, o op) error {
-	if a.getOverflow() == 0 {
+	if a.getFlag(flagOverflow) == 0 {
 		a.branch(o)
 	}
 	return nil
@@ -279,7 +279,7 @@ func execBVC(a *Appleone, o op) error {
 // branch on V = 1                  N Z C I D V
 //                                  - - - - - -
 func execBVS(a *Appleone, o op) error {
-	if a.getOverflow() != 0 {
+	if a.getFlag(flagOverflow) != 0 {
 		a.branch(o)
 	}
 	return nil
@@ -292,21 +292,21 @@ func execBIT(a *Appleone, o op) error {
 	if err != nil {
 		return err
 	}
-	a.setZeroIfNeeded(a.cpu.a & operand)
-	a.clearOverflow()
+	a.maybeSetFlagZero(a.cpu.a & operand)
+	a.clearFlag(flagOverflow)
 
 	if operand&flagOverflow != 0 {
-		a.setOverflow()
+		a.setFlag(flagOverflow)
 	}
 
-	a.setNegativeIfOverflow(operand)
+	a.maybeHandleOverflow(operand)
 	return nil
 }
 
 // branch on C = 0                  N Z C I D V
 //                                  - - - - - -
 func execBCC(a *Appleone, o op) error {
-	if a.getCarry() == 0 {
+	if a.getFlag(flagCarry) == 0 {
 		a.branch(o)
 	}
 	return nil
@@ -315,7 +315,7 @@ func execBCC(a *Appleone, o op) error {
 // branch on N = 1                  N Z C I D V
 //                                  - - - - - -
 func execBMI(a *Appleone, o op) error {
-	if a.getNegative() == flagNegative {
+	if a.getFlag(flagNegative) == flagNegative {
 		a.branch(o)
 	}
 	return nil
@@ -324,7 +324,7 @@ func execBMI(a *Appleone, o op) error {
 // branch on N = 0                  N Z C I D V
 //                                  - - - - - -
 func execBPL(a *Appleone, o op) error {
-	if a.getNegative() == 0 {
+	if a.getFlag(flagNegative) == 0 {
 		a.branch(o)
 	}
 	return nil
@@ -333,7 +333,7 @@ func execBPL(a *Appleone, o op) error {
 // branch on C = 1                  N Z C I D V
 //                                  - - - - - -
 func execBCS(a *Appleone, o op) error {
-	if a.getCarry() != 0 {
+	if a.getFlag(flagCarry) != 0 {
 		a.branch(o)
 	}
 	return nil
@@ -358,8 +358,8 @@ func execEOR(a *Appleone, o op) error {
 		return err
 	}
 	a.cpu.a ^= operand
-	a.setNegativeIfOverflow(a.cpu.a)
-	a.setZeroIfNeeded(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
 
@@ -388,49 +388,49 @@ func execCPY(a *Appleone, o op) error {
 // 0 -> C                           N Z C I D V
 //                                  - - 0 - - -
 func execCLC(a *Appleone, o op) error {
-	a.clearCarry()
+	a.clearFlag(flagCarry)
 	return nil
 }
 
 // 0 -> D                           N Z C I D V
 //                                  - - - - 0 -
 func execCLD(a *Appleone, o op) error {
-	a.clearDec()
+	a.clearFlag(flagDecimalMode)
 	return nil
 }
 
 // 0 -> I                           N Z C I D V
 //                                  - - - 0 - -
 func execCLI(a *Appleone, o op) error {
-	a.clearInterrupt()
+	a.clearFlag(flagDisableInterrupts)
 	return nil
 }
 
 // 0 -> V                           N Z C I D V
 //                                  - - - - - 0
 func execCLV(a *Appleone, o op) error {
-	a.clearOverflow()
+	a.clearFlag(flagOverflow)
 	return nil
 }
 
 // 1 -> C                           N Z C I D V
 //                                  - - 1 - - -
 func execSEC(a *Appleone, o op) error {
-	a.setCarry()
+	a.setFlag(flagCarry)
 	return nil
 }
 
 // 1 -> D                           N Z C I D V
 //                                  - - - - 1 -
 func execSED(a *Appleone, o op) error {
-	a.setDec()
+	a.setFlag(flagDecimalMode)
 	return nil
 }
 
 // 1 -> I                           N Z C I D V
 //                                  - - - 1 - -
 func execSEI(a *Appleone, o op) error {
-	a.setInterrupt()
+	a.setFlag(flagDisableInterrupts)
 	return nil
 }
 
@@ -470,8 +470,8 @@ func execPHA(a *Appleone, o op) error {
 //                                  + + - - - -
 func execTXA(a *Appleone, o op) error {
 	a.cpu.a = a.cpu.x
-	a.setNegativeIfOverflow(a.cpu.a)
-	a.setZeroIfNeeded(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
 
@@ -479,8 +479,8 @@ func execTXA(a *Appleone, o op) error {
 //                                  + + - - - -
 func execTYA(a *Appleone, o op) error {
 	a.cpu.a = a.cpu.y
-	a.setNegativeIfOverflow(a.cpu.a)
-	a.setZeroIfNeeded(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
 
@@ -488,8 +488,8 @@ func execTYA(a *Appleone, o op) error {
 //                                  + + - - - -
 func execTSX(a *Appleone, o op) error {
 	a.cpu.x = a.cpu.sp
-	a.setNegativeIfOverflow(a.cpu.x)
-	a.setZeroIfNeeded(a.cpu.x)
+	a.maybeHandleOverflow(a.cpu.x)
+	a.maybeSetFlagZero(a.cpu.x)
 	return nil
 }
 
@@ -497,16 +497,16 @@ func execTSX(a *Appleone, o op) error {
 //                                  + + - - - -
 func execPLA(a *Appleone, o op) error {
 	a.cpu.a = a.popStackWord()
-	a.setNegativeIfOverflow(a.cpu.a)
-	a.setZeroIfNeeded(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
 
 // pull SR from stack                  N Z C I D V
 func execPLP(a *Appleone, o op) error {
 	a.cpu.ps = a.popStackWord() | 0B_00110000
-	a.setNegativeIfOverflow(a.cpu.a)
-	a.setZeroIfNeeded(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
 
@@ -549,13 +549,13 @@ func execLSR(a *Appleone, o op) error {
 	operand >>= 1
 
 	if bit {
-		a.setCarry()
+		a.setFlag(flagCarry)
 	} else {
-		a.clearCarry()
+		a.clearFlag(flagCarry)
 	}
 
-	a.setZeroIfNeeded(operand)
-	a.setNegativeIfOverflow(operand)
+	a.maybeSetFlagZero(operand)
+	a.maybeHandleOverflow(operand)
 
 	if o.addrMode == accumulator {
 		a.cpu.a = operand
@@ -580,14 +580,14 @@ func execROL(a *Appleone, o op) error {
 	}
 
 	var carry bool
-	if a.getCarry() == flagCarry {
+	if a.getFlag(flagCarry) == flagCarry {
 		carry = true
 	}
 
 	if operand>>7 != 0 {
-		a.setCarry()
+		a.setFlag(flagCarry)
 	} else {
-		a.clearCarry()
+		a.clearFlag(flagCarry)
 	}
 
 	operand <<= 1
@@ -596,8 +596,8 @@ func execROL(a *Appleone, o op) error {
 		operand |= flagCarry
 	}
 
-	a.setZeroIfNeeded(operand)
-	a.setNegativeIfOverflow(operand)
+	a.maybeSetFlagZero(operand)
+	a.maybeHandleOverflow(operand)
 
 	if o.addrMode == accumulator {
 		a.cpu.a = operand
@@ -618,8 +618,8 @@ func execROL(a *Appleone, o op) error {
 func execTXS(a *Appleone, o op) error {
 	a.cpu.sp = a.cpu.x
 	// TODO: needed?
-	// a.setZeroIfNeeded(a.cpu.sp)
-	// a.setNegativeIfOverflow(a.cpu.sp)
+	// a.maybeSetFlagZero(a.cpu.sp)
+	// a.maybeHandleOverflow(a.cpu.sp)
 	return nil
 }
 
@@ -632,14 +632,14 @@ func execROR(a *Appleone, o op) error {
 	}
 
 	var carry bool
-	if a.getCarry() == flagCarry {
+	if a.getFlag(flagCarry) == flagCarry {
 		carry = true
 	}
 
 	if operand&0x01 != 0 {
-		a.setCarry()
+		a.setFlag(flagCarry)
 	} else {
-		a.clearCarry()
+		a.clearFlag(flagCarry)
 	}
 
 	operand >>= 1
@@ -648,8 +648,8 @@ func execROR(a *Appleone, o op) error {
 		operand |= flagNegative
 	}
 
-	a.setZeroIfNeeded(operand)
-	a.setNegativeIfOverflow(operand)
+	a.maybeSetFlagZero(operand)
+	a.maybeHandleOverflow(operand)
 
 	if o.addrMode == accumulator {
 		a.cpu.a = operand
@@ -674,15 +674,15 @@ func execASL(a *Appleone, o op) error {
 	}
 
 	if operand>>7 == 1 {
-		a.setCarry()
+		a.setFlag(flagCarry)
 	} else {
-		a.clearCarry()
+		a.clearFlag(flagCarry)
 	}
 
 	operand <<= 1
 
-	a.setZeroIfNeeded(operand)
-	a.setNegativeIfOverflow(operand)
+	a.maybeSetFlagZero(operand)
+	a.maybeHandleOverflow(operand)
 
 	if o.addrMode == accumulator {
 		a.cpu.a = operand
@@ -706,8 +706,8 @@ func execAND(a *Appleone, o op) error {
 		return err
 	}
 	a.cpu.a &= operand
-	a.setZeroIfNeeded(a.cpu.a)
-	a.setNegativeIfOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
 	return nil
 }
 
@@ -719,7 +719,7 @@ func execORA(a *Appleone, o op) error {
 		return err
 	}
 	a.cpu.a |= operand
-	a.setZeroIfNeeded(a.cpu.a)
-	a.setNegativeIfOverflow(a.cpu.a)
+	a.maybeSetFlagZero(a.cpu.a)
+	a.maybeHandleOverflow(a.cpu.a)
 	return nil
 }

@@ -19,6 +19,7 @@ func New() *Appleone {
 	}
 }
 
+// load puts the provided data into the apple1's memory block starting at the provided address
 func (a *Appleone) load(addr uint16, data []byte) {
 	a.mem.load(addr, data)
 	a.cpu.pc = addr
@@ -126,68 +127,35 @@ func (a *Appleone) nextDWord() uint16 {
 	return a.littleEndianToUint16(a.mem[a.cpu.pc-1], a.mem[a.cpu.pc-2])
 }
 
-func (a *Appleone) setZeroIfNeeded(word byte) {
-	a.clearZero()
+// maybeSetFlagZero takes a single word (byte), clears flagZero, and sets flagZero if word is 0
+func (a *Appleone) maybeSetFlagZero(word byte) {
+	a.clearFlag(flagZero)
 	if word == 0 {
-		a.setZero()
+		a.setFlag(flagZero)
 	}
 }
 
-func (a *Appleone) setZero() {
-	a.cpu.ps |= flagZero
+func (a *Appleone) getFlag(flag byte) byte {
+	return a.cpu.ps & flag
 }
 
-func (a *Appleone) clearZero() {
-	a.cpu.sp &^= flagZero
+func (a *Appleone) setFlag(flag byte) {
+	a.cpu.ps |= flag
 }
 
-func (a *Appleone) getNegative() byte {
-	return a.cpu.ps & flagNegative
+func (a *Appleone) clearFlag(flag byte) {
+	a.cpu.ps &^= flag
 }
 
-func (a *Appleone) setNegativeIfOverflow(word byte) {
-	a.clearNegative()
+func (a *Appleone) maybeHandleOverflow(word byte) {
+	a.clearFlag(flagNegative)
 	if word > 127 {
-		a.setNegative()
+		a.setFlag(flagNegative)
 	}
 }
 
-func (a *Appleone) setNegative() {
-	a.cpu.ps |= flagZero
-}
-
-func (a *Appleone) clearNegative() {
-	a.cpu.sp &^= flagZero
-}
-
-func (a *Appleone) getCarry() byte {
-	return a.cpu.sp & flagCarry
-}
-
-func (a *Appleone) setCarry() {
-	a.cpu.sp |= flagCarry
-}
-
-func (a *Appleone) clearCarry() {
-	a.cpu.sp &^= flagCarry
-}
-
-func (a *Appleone) getOverflow() byte {
-	return a.cpu.ps & flagOverflow
-}
-
-func (a *Appleone) setOverflow() {
-	a.cpu.sp |= flagOverflow
-}
-
-func (a *Appleone) clearOverflow() {
-	a.cpu.sp &^= flagOverflow
-}
-
-func (a *Appleone) getZero() byte {
-	return a.cpu.ps & flagZero
-}
-
+// Branch offsets are signed 8-bit values, -128 ... +127, negative offsets in two's
+// complement. Page transitions may occur and add an extra cycle to the exucution
 func (a *Appleone) branch(o op) error {
 	offset, err := a.getOperand(o)
 	if err != nil {
@@ -201,35 +169,21 @@ func (a *Appleone) branch(o op) error {
 	return nil
 }
 
+// compare clears zero, carry, and negative flags, compares the two bytes, and sets the
+// appropriate flags based on the comparison between the bytes.
 func (a *Appleone) compare(b1, b2 byte) {
-	a.clearZero()
-	a.clearCarry()
-	a.clearNegative()
+	a.clearFlag(flagZero)
+	a.clearFlag(flagCarry)
+	a.clearFlag(flagNegative)
 
 	if b1 == b2 {
-		a.setZero()
-		a.setCarry()
+		a.setFlag(flagZero)
+		a.setFlag(flagCarry)
 	}
 	if b1 > b2 {
-		a.setCarry()
+		a.setFlag(flagCarry)
 	}
 
-	sum := byte(uint16(b1) - uint16(b2))
-	a.setNegativeIfOverflow(sum)
-}
-
-func (a *Appleone) setDec() {
-	a.cpu.sp |= flagDecimalMode
-}
-
-func (a *Appleone) clearDec() {
-	a.cpu.sp &^= flagDecimalMode
-}
-
-func (a *Appleone) setInterrupt() {
-	a.cpu.sp |= flagDisableInterrupts
-}
-
-func (a *Appleone) clearInterrupt() {
-	a.cpu.sp &^= flagDisableInterrupts
+	b := byte(uint16(b1) - uint16(b2))
+	a.maybeHandleOverflow(b)
 }
