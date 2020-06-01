@@ -26,19 +26,19 @@ func (a *Appleone) load(addr uint16, data []byte) {
 }
 
 func (a *Appleone) step() {
-	op, err := opByCode(a.mem[a.cpu.pc])
+	operation, err := operationByCode(a.mem[a.cpu.pc])
 	if err != nil {
 		fmt.Println("TODO")
 	}
 
-	a.cpu.pc += uint16(op.size)
+	a.cpu.pc += uint16(operation.size)
 
-	if err := op.exec(a, op); err != nil {
+	if err := operation.exec(a, operation); err != nil {
 		fmt.Println("TODO")
 	}
 }
 
-func (a *Appleone) getAddr(o op) (uint16, error) {
+func (a *Appleone) getAddr(o operation) (uint16, error) {
 	switch o.addrMode {
 	// TODO: will these ever apply here?
 	// case accumulator:
@@ -75,7 +75,7 @@ func (a *Appleone) getAddr(o op) (uint16, error) {
 	}
 }
 
-func (a *Appleone) getOperand(o op) (byte, error) {
+func (a *Appleone) getOperand(o operation) (byte, error) {
 	if o.addrMode == accumulator {
 		return a.cpu.a, nil
 	}
@@ -156,7 +156,7 @@ func (a *Appleone) maybeSetFlagOverflow(word byte) {
 
 // Branch offsets are signed 8-bit values, -128 ... +127, negative offsets in two's
 // complement. Page transitions may occur and add an extra cycle to the exucution
-func (a *Appleone) branch(o op) error {
+func (a *Appleone) branch(o operation) error {
 	offset, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -186,4 +186,13 @@ func (a *Appleone) compare(b1, b2 byte) {
 
 	b := byte(uint16(b1) - uint16(b2))
 	a.maybeSetFlagOverflow(b)
+}
+
+func (a *Appleone) setMem(o operation, operand byte) error {
+	addr, err := a.getAddr(o)
+	if err != nil {
+		return err
+	}
+	a.mem[addr] = operand
+	return nil
 }

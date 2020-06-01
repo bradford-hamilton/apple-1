@@ -71,7 +71,7 @@ const (
 // StackBottom represents the start of the stack
 const StackBottom uint16 = 0x0100 // 256
 
-// Mos6502 TODO: docs
+// Mos6502 represents the cpu's registers
 type Mos6502 struct {
 	sp byte   // register - stack pointer
 	pc uint16 // register - program counter

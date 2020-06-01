@@ -4,18 +4,18 @@ import (
 	"errors"
 )
 
-// op represents an operation. It includes the name of the op, it's 8 bit hexidecimal
-// opcode, how many bytes it occupies (it's size), as well as it's addressing mode.
-type op struct {
+// operation includes the name of the operation, it's 8 bit hexidecimal opcode, how
+// many bytes it occupies (it's size), as well as it's addressing mode.
+type operation struct {
 	name     string
 	opcode   byte
 	size     byte
 	addrMode addrMode
-	exec     func(a *Appleone, o op) error
+	exec     func(a *Appleone, op operation) error
 }
 
-func newOp(name string, opcode, size byte, addrMode addrMode, exec func(a *Appleone, o op) error) op {
-	return op{
+func newOp(name string, opcode, size byte, addrMode addrMode, exec func(a *Appleone, op operation) error) operation {
+	return operation{
 		name:     name,
 		opcode:   opcode,
 		size:     size,
@@ -24,18 +24,18 @@ func newOp(name string, opcode, size byte, addrMode addrMode, exec func(a *Apple
 	}
 }
 
-// opByCode takes an opcode (a single byte/word) and returns the associated operation
-func opByCode(b byte) (op, error) {
+// operationByCode takes an opcode (a single byte/word) and returns the associated operation
+func operationByCode(b byte) (operation, error) {
 	o, ok := opcodes[b]
 	if !ok {
-		return op{}, errors.New("unknown opcode")
+		return operation{}, errors.New("unknown opcode")
 	}
 	return o, nil
 }
 
 // opcodes represent all of the Apple 1 opcodes available. Each 8 bit opcode is mapped to a corresponding
 // "op" which is just a struct holding metadata about the operation.
-var opcodes = map[byte]op{
+var opcodes = map[byte]operation{
 	// BRK Force Break
 	// addressing    assembler    opc  bytes  cyles
 	// --------------------------------------------

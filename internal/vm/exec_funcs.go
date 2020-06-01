@@ -2,7 +2,7 @@ package vm
 
 // interrupt,                       N Z C I D V
 // push PC+2, push SR               - - - 1 - -
-func execBRK(a *Appleone, o op) error {
+func execBRK(a *Appleone, o operation) error {
 	// set processer status flag to BRK
 	a.cpu.ps = flagBreak
 
@@ -17,7 +17,7 @@ func execBRK(a *Appleone, o op) error {
 
 // pull SR, pull PC                 N Z C I D V
 // from stack
-func execRTI(a *Appleone, o op) error {
+func execRTI(a *Appleone, o operation) error {
 	a.cpu.ps = a.popStackWord()
 	a.cpu.pc = a.popStackDWord()
 	return nil
@@ -25,7 +25,7 @@ func execRTI(a *Appleone, o op) error {
 
 // M - 1 -> M                       N Z C I D V
 //                                  + + - - - -
-func execDEC(a *Appleone, o op) error {
+func execDEC(a *Appleone, o operation) error {
 	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func execDEC(a *Appleone, o op) error {
 
 // M + 1 -> M                       N Z C I D V
 //                                  + + - - - -
-func execINC(a *Appleone, o op) error {
+func execINC(a *Appleone, o operation) error {
 	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func execINC(a *Appleone, o op) error {
 
 // X + 1 -> X                       N Z C I D V
 //                                  + + - - - -
-func execINX(a *Appleone, o op) error {
+func execINX(a *Appleone, o operation) error {
 	a.cpu.x++
 	a.maybeSetFlagZero(a.cpu.x)
 	a.maybeSetFlagOverflow(a.cpu.x)
@@ -64,7 +64,7 @@ func execINX(a *Appleone, o op) error {
 
 // Y + 1 -> Y                       N Z C I D V
 //                                  + + - - - -
-func execINY(a *Appleone, o op) error {
+func execINY(a *Appleone, o operation) error {
 	a.cpu.y++
 	a.maybeSetFlagZero(a.cpu.y)
 	a.maybeSetFlagOverflow(a.cpu.y)
@@ -73,7 +73,7 @@ func execINY(a *Appleone, o op) error {
 
 // A -> X                           N Z C I D V
 //                                  + + - - - -
-func execTAX(a *Appleone, o op) error {
+func execTAX(a *Appleone, o operation) error {
 	a.cpu.x = a.cpu.a
 	a.maybeSetFlagZero(a.cpu.x)
 	a.maybeSetFlagOverflow(a.cpu.x)
@@ -82,7 +82,7 @@ func execTAX(a *Appleone, o op) error {
 
 // A -> Y                           N Z C I D V
 //                                  + + - - - -
-func execTAY(a *Appleone, o op) error {
+func execTAY(a *Appleone, o operation) error {
 	a.cpu.y = a.cpu.a
 	a.maybeSetFlagZero(a.cpu.y)
 	a.maybeSetFlagOverflow(a.cpu.y)
@@ -91,7 +91,7 @@ func execTAY(a *Appleone, o op) error {
 
 // X - 1 -> X                       N Z C I D V
 //                                  + + - - - -
-func execDEX(a *Appleone, o op) error {
+func execDEX(a *Appleone, o operation) error {
 	a.cpu.x--
 	a.maybeSetFlagZero(a.cpu.x)
 	a.maybeSetFlagOverflow(a.cpu.x)
@@ -100,7 +100,7 @@ func execDEX(a *Appleone, o op) error {
 
 // Y - 1 -> Y                       N Z C I D V
 //                                  + + - - - -
-func execDEY(a *Appleone, o op) error {
+func execDEY(a *Appleone, o operation) error {
 	a.cpu.y--
 	a.maybeSetFlagZero(a.cpu.y)
 	a.maybeSetFlagOverflow(a.cpu.y)
@@ -109,7 +109,7 @@ func execDEY(a *Appleone, o op) error {
 
 // M -> A                           N Z C I D V
 //                                  + + - - - -
-func execLDA(a *Appleone, o op) error {
+func execLDA(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -122,7 +122,7 @@ func execLDA(a *Appleone, o op) error {
 
 // M -> X                           N Z C I D V
 //                                  + + - - - -
-func execLDX(a *Appleone, o op) error {
+func execLDX(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -135,7 +135,7 @@ func execLDX(a *Appleone, o op) error {
 
 // M -> Y                           N Z C I D V
 //                                  + + - - - -
-func execLDY(a *Appleone, o op) error {
+func execLDY(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func execLDY(a *Appleone, o op) error {
 
 // A + M + C -> A, C                N Z C I D V
 //                                  + + + - - +
-func execADC(a *Appleone, o op) error {
+func execADC(a *Appleone, o operation) error {
 	b, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func execADC(a *Appleone, o op) error {
 
 // A - M - C -> A                   N Z C I D V
 //                                  + + + - - +
-func execSBC(a *Appleone, o op) error {
+func execSBC(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -211,7 +211,7 @@ func execSBC(a *Appleone, o op) error {
 
 // X -> M                           N Z C I D V
 //                                  - - - - - -
-func execSTX(a *Appleone, o op) error {
+func execSTX(a *Appleone, o operation) error {
 	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
@@ -222,7 +222,7 @@ func execSTX(a *Appleone, o op) error {
 
 // Y -> M                           N Z C I D V
 //                                  - - - - - -
-func execSTY(a *Appleone, o op) error {
+func execSTY(a *Appleone, o operation) error {
 	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
@@ -233,7 +233,7 @@ func execSTY(a *Appleone, o op) error {
 
 // A -> M                           N Z C I D V
 //                                  - - - - - -
-func execSTA(a *Appleone, o op) error {
+func execSTA(a *Appleone, o operation) error {
 	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
@@ -244,7 +244,7 @@ func execSTA(a *Appleone, o op) error {
 
 // branch on Z = 1                  N Z C I D V
 //                                  - - - - - -
-func execBEQ(a *Appleone, o op) error {
+func execBEQ(a *Appleone, o operation) error {
 	if a.getFlag(flagZero) == flagZero {
 		a.branch(o)
 	}
@@ -253,7 +253,7 @@ func execBEQ(a *Appleone, o op) error {
 
 // branch on Z = 0                  N Z C I D V
 //                                  - - - - - -
-func execBNE(a *Appleone, o op) error {
+func execBNE(a *Appleone, o operation) error {
 	if a.getFlag(flagZero) != flagZero {
 		a.branch(o)
 	}
@@ -262,7 +262,7 @@ func execBNE(a *Appleone, o op) error {
 
 // branch on V = 0                  N Z C I D V
 //                                  - - - - - -
-func execBVC(a *Appleone, o op) error {
+func execBVC(a *Appleone, o operation) error {
 	if a.getFlag(flagOverflow) == 0 {
 		a.branch(o)
 	}
@@ -271,7 +271,7 @@ func execBVC(a *Appleone, o op) error {
 
 // branch on V = 1                  N Z C I D V
 //                                  - - - - - -
-func execBVS(a *Appleone, o op) error {
+func execBVS(a *Appleone, o operation) error {
 	if a.getFlag(flagOverflow) != 0 {
 		a.branch(o)
 	}
@@ -280,7 +280,7 @@ func execBVS(a *Appleone, o op) error {
 
 // bits 7 and 6 of operand are transfered to bit 7 and 6 of SR (N,V);
 // the zeroflag is set to the result of operand AND accumulator.
-func execBIT(a *Appleone, o op) error {
+func execBIT(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -298,7 +298,7 @@ func execBIT(a *Appleone, o op) error {
 
 // branch on C = 0                  N Z C I D V
 //                                  - - - - - -
-func execBCC(a *Appleone, o op) error {
+func execBCC(a *Appleone, o operation) error {
 	if a.getFlag(flagCarry) == 0 {
 		a.branch(o)
 	}
@@ -307,7 +307,7 @@ func execBCC(a *Appleone, o op) error {
 
 // branch on N = 1                  N Z C I D V
 //                                  - - - - - -
-func execBMI(a *Appleone, o op) error {
+func execBMI(a *Appleone, o operation) error {
 	if a.getFlag(flagNegative) == flagNegative {
 		a.branch(o)
 	}
@@ -316,7 +316,7 @@ func execBMI(a *Appleone, o op) error {
 
 // branch on N = 0                  N Z C I D V
 //                                  - - - - - -
-func execBPL(a *Appleone, o op) error {
+func execBPL(a *Appleone, o operation) error {
 	if a.getFlag(flagNegative) == 0 {
 		a.branch(o)
 	}
@@ -325,7 +325,7 @@ func execBPL(a *Appleone, o op) error {
 
 // branch on C = 1                  N Z C I D V
 //                                  - - - - - -
-func execBCS(a *Appleone, o op) error {
+func execBCS(a *Appleone, o operation) error {
 	if a.getFlag(flagCarry) != 0 {
 		a.branch(o)
 	}
@@ -334,7 +334,7 @@ func execBCS(a *Appleone, o op) error {
 
 // X - M                            N Z C I D V
 //                                  + + + - - -
-func execCPX(a *Appleone, o op) error {
+func execCPX(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -345,7 +345,7 @@ func execCPX(a *Appleone, o op) error {
 
 // A EOR M -> A                     N Z C I D V
 //                                  + + - - - -
-func execEOR(a *Appleone, o op) error {
+func execEOR(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -358,7 +358,7 @@ func execEOR(a *Appleone, o op) error {
 
 // A - M                            N Z C I D V
 //                                  + + + - - -
-func execCMP(a *Appleone, o op) error {
+func execCMP(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -369,7 +369,7 @@ func execCMP(a *Appleone, o op) error {
 
 // Y - M                            N Z C I D V
 //                                  + + + - - -
-func execCPY(a *Appleone, o op) error {
+func execCPY(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -380,62 +380,62 @@ func execCPY(a *Appleone, o op) error {
 
 // 0 -> C                           N Z C I D V
 //                                  - - 0 - - -
-func execCLC(a *Appleone, o op) error {
+func execCLC(a *Appleone, o operation) error {
 	a.clearFlag(flagCarry)
 	return nil
 }
 
 // 0 -> D                           N Z C I D V
 //                                  - - - - 0 -
-func execCLD(a *Appleone, o op) error {
+func execCLD(a *Appleone, o operation) error {
 	a.clearFlag(flagDecimalMode)
 	return nil
 }
 
 // 0 -> I                           N Z C I D V
 //                                  - - - 0 - -
-func execCLI(a *Appleone, o op) error {
+func execCLI(a *Appleone, o operation) error {
 	a.clearFlag(flagDisableInterrupts)
 	return nil
 }
 
 // 0 -> V                           N Z C I D V
 //                                  - - - - - 0
-func execCLV(a *Appleone, o op) error {
+func execCLV(a *Appleone, o operation) error {
 	a.clearFlag(flagOverflow)
 	return nil
 }
 
 // 1 -> C                           N Z C I D V
 //                                  - - 1 - - -
-func execSEC(a *Appleone, o op) error {
+func execSEC(a *Appleone, o operation) error {
 	a.setFlag(flagCarry)
 	return nil
 }
 
 // 1 -> D                           N Z C I D V
 //                                  - - - - 1 -
-func execSED(a *Appleone, o op) error {
+func execSED(a *Appleone, o operation) error {
 	a.setFlag(flagDecimalMode)
 	return nil
 }
 
 // 1 -> I                           N Z C I D V
 //                                  - - - 1 - -
-func execSEI(a *Appleone, o op) error {
+func execSEI(a *Appleone, o operation) error {
 	a.setFlag(flagDisableInterrupts)
 	return nil
 }
 
 // ---                              N Z C I D V
 //                                  - - - - - -
-func execNOP(a *Appleone, o op) error {
+func execNOP(a *Appleone, o operation) error {
 	return nil
 }
 
 // (PC+1) -> PCL                    N Z C I D V
 // (PC+2) -> PCH                    - - - - - -
-func execJMP(a *Appleone, o op) error {
+func execJMP(a *Appleone, o operation) error {
 	if o.addrMode == indirect {
 		addr, err := a.getAddr(o)
 		if err != nil {
@@ -454,14 +454,14 @@ func execJMP(a *Appleone, o op) error {
 
 // push A                           N Z C I D V
 //                                  - - - - - -
-func execPHA(a *Appleone, o op) error {
+func execPHA(a *Appleone, o operation) error {
 	a.pushWordToStack(a.cpu.a)
 	return nil
 }
 
 // X -> A                           N Z C I D V
 //                                  + + - - - -
-func execTXA(a *Appleone, o op) error {
+func execTXA(a *Appleone, o operation) error {
 	a.cpu.a = a.cpu.x
 	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
@@ -470,7 +470,7 @@ func execTXA(a *Appleone, o op) error {
 
 // Y -> A                           N Z C I D V
 //                                  + + - - - -
-func execTYA(a *Appleone, o op) error {
+func execTYA(a *Appleone, o operation) error {
 	a.cpu.a = a.cpu.y
 	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
@@ -479,7 +479,7 @@ func execTYA(a *Appleone, o op) error {
 
 // SP -> X                          N Z C I D V
 //                                  + + - - - -
-func execTSX(a *Appleone, o op) error {
+func execTSX(a *Appleone, o operation) error {
 	a.cpu.x = a.cpu.sp
 	a.maybeSetFlagOverflow(a.cpu.x)
 	a.maybeSetFlagZero(a.cpu.x)
@@ -488,7 +488,7 @@ func execTSX(a *Appleone, o op) error {
 
 // pull A                           N Z C I D V
 //                                  + + - - - -
-func execPLA(a *Appleone, o op) error {
+func execPLA(a *Appleone, o operation) error {
 	a.cpu.a = a.popStackWord()
 	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
@@ -496,7 +496,7 @@ func execPLA(a *Appleone, o op) error {
 }
 
 // pull SR from stack                  N Z C I D V
-func execPLP(a *Appleone, o op) error {
+func execPLP(a *Appleone, o operation) error {
 	a.cpu.ps = a.popStackWord() | 0B_00110000
 	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
@@ -505,7 +505,7 @@ func execPLP(a *Appleone, o op) error {
 
 // push SR                          N Z C I D V
 //                                  - - - - - -
-func execPHP(a *Appleone, o op) error {
+func execPHP(a *Appleone, o operation) error {
 	a.pushWordToStack(a.cpu.ps)
 	return nil
 }
@@ -513,7 +513,7 @@ func execPHP(a *Appleone, o op) error {
 // push (PC+2),                     N Z C I D V
 // (PC+1) -> PCL                    - - - - - -
 // (PC+2) -> PCH
-func execJSR(a *Appleone, o op) error {
+func execJSR(a *Appleone, o operation) error {
 	a.pushDWordToStack(a.cpu.pc - 1)
 	addr, err := a.getAddr(o)
 	if err != nil {
@@ -525,14 +525,14 @@ func execJSR(a *Appleone, o op) error {
 
 // pull PC, PC+1 -> PC              N Z C I D V
 //                                  - - - - - -
-func execRTS(a *Appleone, o op) error {
+func execRTS(a *Appleone, o operation) error {
 	a.cpu.pc = a.popStackDWord() + 1
 	return nil
 }
 
 // 0 -> [76543210] -> C             N Z C I D V
 //                                  0 + + - - -
-func execLSR(a *Appleone, o op) error {
+func execLSR(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -555,18 +555,16 @@ func execLSR(a *Appleone, o op) error {
 		return nil
 	}
 
-	addr, err := a.getAddr(o)
-	if err != nil {
+	if err := a.setMem(o, operand); err != nil {
 		return err
 	}
-	a.mem[addr] = operand
 
 	return nil
 }
 
 // C <- [76543210] <- C             N Z C I D V
 //                                  + + + - - -
-func execROL(a *Appleone, o op) error {
+func execROL(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -597,18 +595,16 @@ func execROL(a *Appleone, o op) error {
 		return nil
 	}
 
-	addr, err := a.getAddr(o)
-	if err != nil {
+	if err := a.setMem(o, operand); err != nil {
 		return err
 	}
-	a.mem[addr] = operand
 
 	return nil
 }
 
 // X -> SP                          N Z C I D V
 //                                  - - - - - -
-func execTXS(a *Appleone, o op) error {
+func execTXS(a *Appleone, o operation) error {
 	a.cpu.sp = a.cpu.x
 	// TODO: needed?
 	// a.maybeSetFlagZero(a.cpu.sp)
@@ -618,7 +614,7 @@ func execTXS(a *Appleone, o op) error {
 
 // C -> [76543210] -> C             N Z C I D V
 //                                  + + + - - -
-func execROR(a *Appleone, o op) error {
+func execROR(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -649,18 +645,16 @@ func execROR(a *Appleone, o op) error {
 		return nil
 	}
 
-	addr, err := a.getAddr(o)
-	if err != nil {
+	if err := a.setMem(o, operand); err != nil {
 		return err
 	}
-	a.mem[addr] = operand
 
 	return nil
 }
 
 // C <- [76543210] <- 0             N Z C I D V
 //                                  + + + - - -
-func execASL(a *Appleone, o op) error {
+func execASL(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -682,18 +676,16 @@ func execASL(a *Appleone, o op) error {
 		return nil
 	}
 
-	addr, err := a.getAddr(o)
-	if err != nil {
+	if err := a.setMem(o, operand); err != nil {
 		return err
 	}
-	a.mem[addr] = operand
 
 	return nil
 }
 
 // A AND M -> A                     N Z C I D V
 //                                  + + - - - -
-func execAND(a *Appleone, o op) error {
+func execAND(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
@@ -706,7 +698,7 @@ func execAND(a *Appleone, o op) error {
 
 // A OR M -> A                      N Z C I D V
 //                                  + + - - - -
-func execORA(a *Appleone, o op) error {
+func execORA(a *Appleone, o operation) error {
 	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
