@@ -1,12 +1,5 @@
 package vm
 
-import "fmt"
-
-func todo(a *Appleone, o op) error {
-	fmt.Println("implement me")
-	return nil
-}
-
 // interrupt,                       N Z C I D V
 // push PC+2, push SR               - - - 1 - -
 func execBRK(a *Appleone, o op) error {
@@ -41,7 +34,7 @@ func execDEC(a *Appleone, o op) error {
 	b--
 	a.mem[addr] = b
 	a.maybeSetFlagZero(b)
-	a.maybeHandleOverflow(b)
+	a.maybeSetFlagOverflow(b)
 	return nil
 }
 
@@ -56,7 +49,7 @@ func execINC(a *Appleone, o op) error {
 	b++
 	a.mem[addr] = b
 	a.maybeSetFlagZero(b)
-	a.maybeHandleOverflow(b)
+	a.maybeSetFlagOverflow(b)
 	return nil
 }
 
@@ -65,7 +58,7 @@ func execINC(a *Appleone, o op) error {
 func execINX(a *Appleone, o op) error {
 	a.cpu.x++
 	a.maybeSetFlagZero(a.cpu.x)
-	a.maybeHandleOverflow(a.cpu.x)
+	a.maybeSetFlagOverflow(a.cpu.x)
 	return nil
 }
 
@@ -74,7 +67,7 @@ func execINX(a *Appleone, o op) error {
 func execINY(a *Appleone, o op) error {
 	a.cpu.y++
 	a.maybeSetFlagZero(a.cpu.y)
-	a.maybeHandleOverflow(a.cpu.y)
+	a.maybeSetFlagOverflow(a.cpu.y)
 	return nil
 }
 
@@ -83,7 +76,7 @@ func execINY(a *Appleone, o op) error {
 func execTAX(a *Appleone, o op) error {
 	a.cpu.x = a.cpu.a
 	a.maybeSetFlagZero(a.cpu.x)
-	a.maybeHandleOverflow(a.cpu.x)
+	a.maybeSetFlagOverflow(a.cpu.x)
 	return nil
 }
 
@@ -92,7 +85,7 @@ func execTAX(a *Appleone, o op) error {
 func execTAY(a *Appleone, o op) error {
 	a.cpu.y = a.cpu.a
 	a.maybeSetFlagZero(a.cpu.y)
-	a.maybeHandleOverflow(a.cpu.y)
+	a.maybeSetFlagOverflow(a.cpu.y)
 	return nil
 }
 
@@ -101,7 +94,7 @@ func execTAY(a *Appleone, o op) error {
 func execDEX(a *Appleone, o op) error {
 	a.cpu.x--
 	a.maybeSetFlagZero(a.cpu.x)
-	a.maybeHandleOverflow(a.cpu.x)
+	a.maybeSetFlagOverflow(a.cpu.x)
 	return nil
 }
 
@@ -110,7 +103,7 @@ func execDEX(a *Appleone, o op) error {
 func execDEY(a *Appleone, o op) error {
 	a.cpu.y--
 	a.maybeSetFlagZero(a.cpu.y)
-	a.maybeHandleOverflow(a.cpu.y)
+	a.maybeSetFlagOverflow(a.cpu.y)
 	return nil
 }
 
@@ -123,7 +116,7 @@ func execLDA(a *Appleone, o op) error {
 	}
 	a.cpu.a = operand
 	a.maybeSetFlagZero(a.cpu.a)
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	return nil
 }
 
@@ -136,7 +129,7 @@ func execLDX(a *Appleone, o op) error {
 	}
 	a.cpu.x = operand
 	a.maybeSetFlagZero(a.cpu.x)
-	a.maybeHandleOverflow(a.cpu.x)
+	a.maybeSetFlagOverflow(a.cpu.x)
 	return nil
 }
 
@@ -149,7 +142,7 @@ func execLDY(a *Appleone, o op) error {
 	}
 	a.cpu.y = operand
 	a.maybeSetFlagZero(a.cpu.y)
-	a.maybeHandleOverflow(a.cpu.y)
+	a.maybeSetFlagOverflow(a.cpu.y)
 	return nil
 }
 
@@ -177,7 +170,7 @@ func execADC(a *Appleone, o op) error {
 	}
 
 	a.maybeSetFlagZero(a.cpu.a)
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 
 	return nil
 }
@@ -212,7 +205,7 @@ func execSBC(a *Appleone, o op) error {
 	}
 
 	a.maybeSetFlagZero(a.cpu.a)
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	return nil
 }
 
@@ -299,7 +292,7 @@ func execBIT(a *Appleone, o op) error {
 		a.setFlag(flagOverflow)
 	}
 
-	a.maybeHandleOverflow(operand)
+	a.maybeSetFlagOverflow(operand)
 	return nil
 }
 
@@ -358,7 +351,7 @@ func execEOR(a *Appleone, o op) error {
 		return err
 	}
 	a.cpu.a ^= operand
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
@@ -470,7 +463,7 @@ func execPHA(a *Appleone, o op) error {
 //                                  + + - - - -
 func execTXA(a *Appleone, o op) error {
 	a.cpu.a = a.cpu.x
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
@@ -479,7 +472,7 @@ func execTXA(a *Appleone, o op) error {
 //                                  + + - - - -
 func execTYA(a *Appleone, o op) error {
 	a.cpu.a = a.cpu.y
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
@@ -488,7 +481,7 @@ func execTYA(a *Appleone, o op) error {
 //                                  + + - - - -
 func execTSX(a *Appleone, o op) error {
 	a.cpu.x = a.cpu.sp
-	a.maybeHandleOverflow(a.cpu.x)
+	a.maybeSetFlagOverflow(a.cpu.x)
 	a.maybeSetFlagZero(a.cpu.x)
 	return nil
 }
@@ -497,7 +490,7 @@ func execTSX(a *Appleone, o op) error {
 //                                  + + - - - -
 func execPLA(a *Appleone, o op) error {
 	a.cpu.a = a.popStackWord()
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
@@ -505,7 +498,7 @@ func execPLA(a *Appleone, o op) error {
 // pull SR from stack                  N Z C I D V
 func execPLP(a *Appleone, o op) error {
 	a.cpu.ps = a.popStackWord() | 0B_00110000
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	a.maybeSetFlagZero(a.cpu.a)
 	return nil
 }
@@ -555,7 +548,7 @@ func execLSR(a *Appleone, o op) error {
 	}
 
 	a.maybeSetFlagZero(operand)
-	a.maybeHandleOverflow(operand)
+	a.maybeSetFlagOverflow(operand)
 
 	if o.addrMode == accumulator {
 		a.cpu.a = operand
@@ -597,7 +590,7 @@ func execROL(a *Appleone, o op) error {
 	}
 
 	a.maybeSetFlagZero(operand)
-	a.maybeHandleOverflow(operand)
+	a.maybeSetFlagOverflow(operand)
 
 	if o.addrMode == accumulator {
 		a.cpu.a = operand
@@ -619,7 +612,7 @@ func execTXS(a *Appleone, o op) error {
 	a.cpu.sp = a.cpu.x
 	// TODO: needed?
 	// a.maybeSetFlagZero(a.cpu.sp)
-	// a.maybeHandleOverflow(a.cpu.sp)
+	// a.maybeSetFlagOverflow(a.cpu.sp)
 	return nil
 }
 
@@ -649,7 +642,7 @@ func execROR(a *Appleone, o op) error {
 	}
 
 	a.maybeSetFlagZero(operand)
-	a.maybeHandleOverflow(operand)
+	a.maybeSetFlagOverflow(operand)
 
 	if o.addrMode == accumulator {
 		a.cpu.a = operand
@@ -682,7 +675,7 @@ func execASL(a *Appleone, o op) error {
 	operand <<= 1
 
 	a.maybeSetFlagZero(operand)
-	a.maybeHandleOverflow(operand)
+	a.maybeSetFlagOverflow(operand)
 
 	if o.addrMode == accumulator {
 		a.cpu.a = operand
@@ -707,7 +700,7 @@ func execAND(a *Appleone, o op) error {
 	}
 	a.cpu.a &= operand
 	a.maybeSetFlagZero(a.cpu.a)
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	return nil
 }
 
@@ -720,6 +713,6 @@ func execORA(a *Appleone, o op) error {
 	}
 	a.cpu.a |= operand
 	a.maybeSetFlagZero(a.cpu.a)
-	a.maybeHandleOverflow(a.cpu.a)
+	a.maybeSetFlagOverflow(a.cpu.a)
 	return nil
 }

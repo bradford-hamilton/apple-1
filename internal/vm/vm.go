@@ -147,7 +147,7 @@ func (a *Appleone) clearFlag(flag byte) {
 	a.cpu.ps &^= flag
 }
 
-func (a *Appleone) maybeHandleOverflow(word byte) {
+func (a *Appleone) maybeSetFlagOverflow(word byte) {
 	a.clearFlag(flagNegative)
 	if word > 127 {
 		a.setFlag(flagNegative)
@@ -185,5 +185,5 @@ func (a *Appleone) compare(b1, b2 byte) {
 	}
 
 	b := byte(uint16(b1) - uint16(b2))
-	a.maybeHandleOverflow(b)
+	a.maybeSetFlagOverflow(b)
 }
