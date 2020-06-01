@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -34,6 +35,54 @@ func (a *Appleone) step() {
 	if err := op.exec(a, op); err != nil {
 		fmt.Println("TODO")
 	}
+}
+
+func (a *Appleone) getAddr(o op) (uint16, error) {
+	switch o.addrMode {
+	// TODO: will these ever apply here?
+	// case accumulator:
+	//
+	// case implied:
+	//
+	case absolute:
+		return a.nextDWord(), nil
+	case absoluteXIndexed:
+		return a.nextDWord() + uint16(a.cpu.x), nil
+	case absoluteYIndexed:
+		return a.nextDWord() + uint16(a.cpu.y), nil
+	case immediate:
+		return a.cpu.pc - 1, nil
+	case indirect:
+		return uint16(a.nextWord()), nil
+	case indirectXIndexed:
+		addr := (uint16(a.nextWord()) + uint16(a.cpu.x)) & 0xFF
+		return a.littleEndianToUint16(a.mem[addr+1], a.mem[addr]), nil
+	case indirectYIndexed:
+		addr := uint16(a.nextWord())
+		val := a.littleEndianToUint16(a.mem[addr+1], a.mem[addr])
+		return val + uint16(a.cpu.y), nil
+	case relative:
+		return a.cpu.pc - 1, nil
+	case zeroPage:
+		return uint16(a.nextWord()) & 0xFF, nil
+	case zeroPageXIndexed:
+		return (uint16(a.nextWord()) + uint16(a.cpu.x)) & 0xFF, nil
+	case zeroPageYIndexed:
+		return (uint16(a.nextWord()) + uint16(a.cpu.y)) & 0xFF, nil
+	default:
+		return 0, errors.New("unkown addressing mode")
+	}
+}
+
+func (a *Appleone) getOperand(o op) (uint8, error) {
+	if o.addrMode == accumulator {
+		return a.cpu.a, nil
+	}
+	b, err := a.getAddr(o)
+	if err != nil {
+		return 0, err
+	}
+	return a.mem[b], nil
 }
 
 func (a *Appleone) littleEndianToUint16(big, little byte) uint16 {
@@ -140,7 +189,7 @@ func (a *Appleone) getZero() byte {
 }
 
 func (a *Appleone) branch(o op) error {
-	offset, err := o.getOperand(a)
+	offset, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}

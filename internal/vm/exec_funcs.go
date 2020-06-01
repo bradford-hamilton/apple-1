@@ -33,7 +33,7 @@ func execRTI(a *Appleone, o op) error {
 // M - 1 -> M                       N Z C I D V
 //                                  + + - - - -
 func execDEC(a *Appleone, o op) error {
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func execDEC(a *Appleone, o op) error {
 // M + 1 -> M                       N Z C I D V
 //                                  + + - - - -
 func execINC(a *Appleone, o op) error {
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func execDEY(a *Appleone, o op) error {
 // M -> A                           N Z C I D V
 //                                  + + - - - -
 func execLDA(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func execLDA(a *Appleone, o op) error {
 // M -> X                           N Z C I D V
 //                                  + + - - - -
 func execLDX(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func execLDX(a *Appleone, o op) error {
 // M -> Y                           N Z C I D V
 //                                  + + - - - -
 func execLDY(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func execLDY(a *Appleone, o op) error {
 // A + M + C -> A, C                N Z C I D V
 //                                  + + + - - +
 func execADC(a *Appleone, o op) error {
-	b, err := o.getOperand(a)
+	b, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func execADC(a *Appleone, o op) error {
 // A - M - C -> A                   N Z C I D V
 //                                  + + + - - +
 func execSBC(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func execSBC(a *Appleone, o op) error {
 // X -> M                           N Z C I D V
 //                                  - - - - - -
 func execSTX(a *Appleone, o op) error {
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func execSTX(a *Appleone, o op) error {
 // Y -> M                           N Z C I D V
 //                                  - - - - - -
 func execSTY(a *Appleone, o op) error {
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func execSTY(a *Appleone, o op) error {
 // A -> M                           N Z C I D V
 //                                  - - - - - -
 func execSTA(a *Appleone, o op) error {
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -288,7 +288,7 @@ func execBVS(a *Appleone, o op) error {
 // bits 7 and 6 of operand are transfered to bit 7 and 6 of SR (N,V);
 // the zeroflag is set to the result of operand AND accumulator.
 func execBIT(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -342,7 +342,7 @@ func execBCS(a *Appleone, o op) error {
 // X - M                            N Z C I D V
 //                                  + + + - - -
 func execCPX(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -353,7 +353,7 @@ func execCPX(a *Appleone, o op) error {
 // A EOR M -> A                     N Z C I D V
 //                                  + + - - - -
 func execEOR(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -366,7 +366,7 @@ func execEOR(a *Appleone, o op) error {
 // A - M                            N Z C I D V
 //                                  + + + - - -
 func execCMP(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -377,7 +377,7 @@ func execCMP(a *Appleone, o op) error {
 // Y - M                            N Z C I D V
 //                                  + + + - - -
 func execCPY(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -444,14 +444,14 @@ func execNOP(a *Appleone, o op) error {
 // (PC+2) -> PCH                    - - - - - -
 func execJMP(a *Appleone, o op) error {
 	if o.addrMode == indirect {
-		addr, err := o.getAddr(a)
+		addr, err := a.getAddr(o)
 		if err != nil {
 			return err
 		}
 		a.cpu.pc = a.littleEndianToUint16(a.mem[addr+1], a.mem[addr])
 		return nil
 	}
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -522,7 +522,7 @@ func execPHP(a *Appleone, o op) error {
 // (PC+2) -> PCH
 func execJSR(a *Appleone, o op) error {
 	a.pushDWordToStack(a.cpu.pc - 1)
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -540,7 +540,7 @@ func execRTS(a *Appleone, o op) error {
 // 0 -> [76543210] -> C             N Z C I D V
 //                                  0 + + - - -
 func execLSR(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -562,7 +562,7 @@ func execLSR(a *Appleone, o op) error {
 		return nil
 	}
 
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -574,7 +574,7 @@ func execLSR(a *Appleone, o op) error {
 // C <- [76543210] <- C             N Z C I D V
 //                                  + + + - - -
 func execROL(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -604,7 +604,7 @@ func execROL(a *Appleone, o op) error {
 		return nil
 	}
 
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -626,7 +626,7 @@ func execTXS(a *Appleone, o op) error {
 // C -> [76543210] -> C             N Z C I D V
 //                                  + + + - - -
 func execROR(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -656,7 +656,7 @@ func execROR(a *Appleone, o op) error {
 		return nil
 	}
 
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -668,7 +668,7 @@ func execROR(a *Appleone, o op) error {
 // C <- [76543210] <- 0             N Z C I D V
 //                                  + + + - - -
 func execASL(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -689,7 +689,7 @@ func execASL(a *Appleone, o op) error {
 		return nil
 	}
 
-	addr, err := o.getAddr(a)
+	addr, err := a.getAddr(o)
 	if err != nil {
 		return err
 	}
@@ -701,7 +701,7 @@ func execASL(a *Appleone, o op) error {
 // A AND M -> A                     N Z C I D V
 //                                  + + - - - -
 func execAND(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
@@ -714,7 +714,7 @@ func execAND(a *Appleone, o op) error {
 // A OR M -> A                      N Z C I D V
 //                                  + + - - - -
 func execORA(a *Appleone, o op) error {
-	operand, err := o.getOperand(a)
+	operand, err := a.getOperand(o)
 	if err != nil {
 		return err
 	}
