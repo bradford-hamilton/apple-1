@@ -1,9 +1,9 @@
 package main
 
-import "github.com/bradford-hamilton/apple-1/internal/vm"
+import (
+	"github.com/bradford-hamilton/apple-1/cmd"
+)
 
 func main() {
-	vm := vm.New()
-	go vm.Run()
-	<-vm.ShutdownC
+	cmd.Execute()
 }
