@@ -3,42 +3,69 @@ package vm
 import (
 	"errors"
 	"fmt"
+	"time"
 )
 
-// Appleone represents the virtual Apple 1 computer
-type Appleone struct {
-	cpu *Mos6502 // virtual mos6502 cpu
-	mem block    // available memory (64kiB)
+const clockSpeed = 1 // 1 MHz
+
+// VM represents the Apple 1 virutal machine
+type VM struct {
+	cpu       *Mos6502      // virtual mos6502 cpu
+	mem       block         // available memory (64kiB)
+	clock     *time.Ticker  // the "cpu" clock
+	ShutdownC chan struct{} //
 }
 
-// New returns a pointer to an initialized Appleone with a brand spankin new CPU
-func New() *Appleone {
-	return &Appleone{
-		cpu: newCPU(),
-		mem: newBlock(),
+// New returns a pointer to an initialized VM with a brand spankin new CPU
+func New() *VM {
+	return &VM{
+		cpu:   newCPU(),
+		mem:   newBlock(),
+		clock: time.NewTicker(time.Second / time.Duration(clockSpeed)),
 	}
 }
 
-// load puts the provided data into the apple1's memory block starting at the provided address
-func (a *Appleone) load(addr uint16, data []byte) {
-	a.mem.load(addr, data)
-	a.cpu.pc = addr
+// Run starts the vm and emulates a clock that runs by default at 60MHz
+// This can be changed with a flag.
+func (vm *VM) Run() {
+	for {
+		select {
+		case <-vm.clock.C:
+			vm.emulateCycle()
+			continue
+		case <-vm.ShutdownC:
+			break
+		}
+		break
+	}
+	vm.sigTerm("gracefully shutting down...")
 }
 
-func (a *Appleone) step() {
-	operation, err := operationByCode(a.mem[a.cpu.pc])
+func (vm *VM) emulateCycle() {
+	operation, err := operationByCode(vm.mem[vm.cpu.pc])
 	if err != nil {
 		fmt.Println("TODO")
 	}
 
-	a.cpu.pc += uint16(operation.size)
+	vm.cpu.pc += uint16(operation.size)
 
-	if err := operation.exec(a, operation); err != nil {
+	if err := operation.exec(vm, operation); err != nil {
 		fmt.Println("TODO")
 	}
 }
 
-func (a *Appleone) getAddr(o operation) (uint16, error) {
+func (vm *VM) sigTerm(msg string) {
+	fmt.Println(msg)
+	vm.ShutdownC <- struct{}{}
+}
+
+// load puts the provided data into the apple1's memory block starting at the provided address
+func (vm *VM) load(addr uint16, data []byte) {
+	vm.mem.load(addr, data)
+	vm.cpu.pc = addr
+}
+
+func (vm *VM) getAddr(o operation) (uint16, error) {
 	switch o.addrMode {
 	// TODO: will these ever apply here?
 	// case accumulator:
@@ -46,153 +73,166 @@ func (a *Appleone) getAddr(o operation) (uint16, error) {
 	// case implied:
 	//
 	case absolute:
-		return a.nextDWord(), nil
+		return vm.nextDWord(), nil
 	case absoluteXIndexed:
-		return a.nextDWord() + uint16(a.cpu.x), nil
+		return vm.nextDWord() + uint16(vm.cpu.x), nil
 	case absoluteYIndexed:
-		return a.nextDWord() + uint16(a.cpu.y), nil
+		return vm.nextDWord() + uint16(vm.cpu.y), nil
 	case immediate:
-		return a.cpu.pc - 1, nil
+		return vm.cpu.pc - 1, nil
 	case indirect:
-		return uint16(a.nextWord()), nil
+		return uint16(vm.nextWord()), nil
 	case indirectXIndexed:
-		addr := (uint16(a.nextWord()) + uint16(a.cpu.x)) & 0xFF
-		return a.littleEndianToUint16(a.mem[addr+1], a.mem[addr]), nil
+		addr := (uint16(vm.nextWord()) + uint16(vm.cpu.x)) & 0xFF
+		return vm.littleEndianToUint16(vm.mem[addr+1], vm.mem[addr]), nil
 	case indirectYIndexed:
-		addr := uint16(a.nextWord())
-		val := a.littleEndianToUint16(a.mem[addr+1], a.mem[addr])
-		return val + uint16(a.cpu.y), nil
+		addr := uint16(vm.nextWord())
+		val := vm.littleEndianToUint16(vm.mem[addr+1], vm.mem[addr])
+		return val + uint16(vm.cpu.y), nil
 	case relative:
-		return a.cpu.pc - 1, nil
+		return vm.cpu.pc - 1, nil
 	case zeroPage:
-		return uint16(a.nextWord()) & 0xFF, nil
+		return uint16(vm.nextWord()) & 0xFF, nil
 	case zeroPageXIndexed:
-		return (uint16(a.nextWord()) + uint16(a.cpu.x)) & 0xFF, nil
+		return (uint16(vm.nextWord()) + uint16(vm.cpu.x)) & 0xFF, nil
 	case zeroPageYIndexed:
-		return (uint16(a.nextWord()) + uint16(a.cpu.y)) & 0xFF, nil
+		return (uint16(vm.nextWord()) + uint16(vm.cpu.y)) & 0xFF, nil
 	default:
 		return 0, errors.New("unkown addressing mode")
 	}
 }
 
-func (a *Appleone) getOperand(o operation) (byte, error) {
+func (vm *VM) getOperand(o operation) (byte, error) {
 	if o.addrMode == accumulator {
-		return a.cpu.a, nil
+		return vm.cpu.a, nil
 	}
-	b, err := a.getAddr(o)
+	b, err := vm.getAddr(o)
 	if err != nil {
 		return 0, err
 	}
-	return a.mem[b], nil
+	return vm.mem[b], nil
 }
 
-func (a *Appleone) littleEndianToUint16(big, little byte) uint16 {
-	return uint16(a.mem[big])<<8 | uint16(a.mem[little])
+func (vm *VM) littleEndianToUint16(big, little byte) uint16 {
+	return uint16(vm.mem[big])<<8 | uint16(vm.mem[little])
 }
 
 // pushWordToStack pushes the given word (byte) into memory and sets the new stack pointer
-func (a *Appleone) pushWordToStack(b byte) {
-	a.mem[StackBottom+uint16(a.cpu.sp)] = b
-	a.cpu.sp = byte((uint16(a.cpu.sp) - 1) & 0xFF)
+func (vm *VM) pushWordToStack(b byte) {
+	vm.mem[StackBottom+uint16(vm.cpu.sp)] = b
+	vm.cpu.sp = byte((uint16(vm.cpu.sp) - 1) & 0xFF)
 }
 
 // pushWordToStack splits the high and low byte of the data passed in, and pushes them to the stack
-func (a *Appleone) pushDWordToStack(data uint16) {
+func (vm *VM) pushDWordToStack(data uint16) {
 	h := byte((data >> 8) & 0xFF)
 	l := byte(data & 0xFF)
-	a.pushWordToStack(h)
-	a.pushWordToStack(l)
+	vm.pushWordToStack(h)
+	vm.pushWordToStack(l)
 }
 
 // popStackWord sets the new stack pointer and returns the appropriate byte in memory
-func (a *Appleone) popStackWord() byte {
-	a.cpu.sp = byte((uint16(a.cpu.sp) + 1) & 0xFF)
-	return a.mem[StackBottom+uint16(a.cpu.sp)]
+func (vm *VM) popStackWord() byte {
+	vm.cpu.sp = byte((uint16(vm.cpu.sp) + 1) & 0xFF)
+	return vm.mem[StackBottom+uint16(vm.cpu.sp)]
 }
 
 // popStackDWord pops two stack words (a double word - uint16) off the stack
-func (a *Appleone) popStackDWord() uint16 {
-	l := a.popStackWord()
-	h := a.popStackWord()
+func (vm *VM) popStackDWord() uint16 {
+	l := vm.popStackWord()
+	h := vm.popStackWord()
 	return (uint16(h) << 8) | uint16(l)
 }
 
 // nextWord returns the next byte in memory
-func (a *Appleone) nextWord() byte {
-	return a.mem[a.cpu.pc-1]
+func (vm *VM) nextWord() byte {
+	return vm.mem[vm.cpu.pc-1]
 }
 
 // nextDWord returns the next two bytes (double word)
-func (a *Appleone) nextDWord() uint16 {
-	return a.littleEndianToUint16(a.mem[a.cpu.pc-1], a.mem[a.cpu.pc-2])
+func (vm *VM) nextDWord() uint16 {
+	return vm.littleEndianToUint16(vm.mem[vm.cpu.pc-1], vm.mem[vm.cpu.pc-2])
 }
 
 // maybeSetFlagZero takes a single word (byte), clears flagZero, and sets flagZero if word is 0
-func (a *Appleone) maybeSetFlagZero(word byte) {
-	a.clearFlag(flagZero)
+func (vm *VM) maybeSetFlagZero(word byte) {
+	vm.clearFlag(flagZero)
 	if word == 0 {
-		a.setFlag(flagZero)
+		vm.setFlag(flagZero)
 	}
 }
 
-func (a *Appleone) getFlag(flag byte) byte {
-	return a.cpu.ps & flag
+func (vm *VM) getFlag(flag byte) byte {
+	return vm.cpu.ps & flag
 }
 
-func (a *Appleone) setFlag(flag byte) {
-	a.cpu.ps |= flag
+func (vm *VM) setFlag(flag byte) {
+	vm.cpu.ps |= flag
 }
 
-func (a *Appleone) clearFlag(flag byte) {
-	a.cpu.ps &^= flag
+func (vm *VM) clearFlag(flag byte) {
+	vm.cpu.ps &^= flag
 }
 
-func (a *Appleone) maybeSetFlagOverflow(word byte) {
-	a.clearFlag(flagNegative)
+func (vm *VM) maybeSetFlagOverflow(word byte) {
+	vm.clearFlag(flagNegative)
 	if word > 127 {
-		a.setFlag(flagNegative)
+		vm.setFlag(flagNegative)
 	}
 }
 
 // Branch offsets are signed 8-bit values, -128 ... +127, negative offsets in two's
 // complement. Page transitions may occur and add an extra cycle to the exucution
-func (a *Appleone) branch(o operation) error {
-	offset, err := a.getOperand(o)
+func (vm *VM) branch(o operation) error {
+	offset, err := vm.getOperand(o)
 	if err != nil {
 		return err
 	}
 	if offset > 127 {
-		a.cpu.pc -= 256 - uint16(offset)
+		vm.cpu.pc -= 256 - uint16(offset)
 	} else {
-		a.cpu.pc += uint16(offset)
+		vm.cpu.pc += uint16(offset)
 	}
 	return nil
 }
 
 // compare clears zero, carry, and negative flags, compares the two bytes, and sets the
 // appropriate flags based on the comparison between the bytes.
-func (a *Appleone) compare(b1, b2 byte) {
-	a.clearFlag(flagZero)
-	a.clearFlag(flagCarry)
-	a.clearFlag(flagNegative)
+func (vm *VM) compare(b1, b2 byte) {
+	vm.clearFlag(flagZero)
+	vm.clearFlag(flagCarry)
+	vm.clearFlag(flagNegative)
 
 	if b1 == b2 {
-		a.setFlag(flagZero)
-		a.setFlag(flagCarry)
+		vm.setFlag(flagZero)
+		vm.setFlag(flagCarry)
 	}
 	if b1 > b2 {
-		a.setFlag(flagCarry)
+		vm.setFlag(flagCarry)
 	}
 
 	b := byte(uint16(b1) - uint16(b2))
-	a.maybeSetFlagOverflow(b)
+	vm.maybeSetFlagOverflow(b)
 }
 
-func (a *Appleone) setMem(o operation, operand byte) error {
-	addr, err := a.getAddr(o)
+func (vm *VM) setMem(o operation, operand byte) error {
+	addr, err := vm.getAddr(o)
 	if err != nil {
 		return err
 	}
-	a.mem[addr] = operand
+	vm.mem[addr] = operand
 	return nil
 }
+
+// func (vm *VM) execBRK(o operation) error {
+// 	// set processer status flag to BRK
+// 	vm.cpu.ps = flagBreak
+
+// 	vm.pushDWordToStack(vm.cpu.pc + 1)
+// 	vm.pushWordToStack(vm.cpu.ps)
+
+// 	vm.setFlag(flagDisableInterrupts)
+// 	vm.cpu.pc = uint16(vm.mem[0xFFFF])<<8 | uint16(vm.mem[0xFFFE])
+
+// 	return nil
+// }

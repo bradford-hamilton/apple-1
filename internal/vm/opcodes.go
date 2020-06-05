@@ -11,10 +11,10 @@ type operation struct {
 	opcode   byte
 	size     byte
 	addrMode addrMode
-	exec     func(a *Appleone, op operation) error
+	exec     func(a *VM, op operation) error
 }
 
-func newOp(name string, opcode, size byte, addrMode addrMode, exec func(a *Appleone, op operation) error) operation {
+func newOp(name string, opcode, size byte, addrMode addrMode, exec func(a *VM, op operation) error) operation {
 	return operation{
 		name:     name,
 		opcode:   opcode,
